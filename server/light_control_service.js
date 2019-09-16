@@ -47,7 +47,7 @@ mumble.connect( 'mumble://localhost', mumbleOptions, function ( error, connectio
 });
 
 //Test artnet
-artnet.set([255, 127]);
+artnet.set([255, 129]);
 
 //Setup animations for direct mode
 const toFlashAnim = new DMX.Animation().add({
@@ -144,5 +144,8 @@ var onInit = function() {
 
 var onVoice = function( voice ) {
     var pcmData = voice;
-    console.log(parseFloat(pcmData));
+    //console.log(parseFloat(pcmData));
 };
+
+artnet.set([flashBright,flashBright,flashBright,flashBright,flashBright,flashBright]);
+artnet.set([idleBright,idleBright,idleBright,idleBright,idleBright,idleBright]);
