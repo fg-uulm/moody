@@ -14,7 +14,10 @@ var activeErrors = [];
 
 //Vars
 var port;
-var serdev = '/dev/ttyAMA0';
+var serdev = '/dev/coin_uart';
+/* This device only works if there's an udev rule creating an appropriate symlink.
+See e.g. https://unix.stackexchange.com/questions/66901/how-to-bind-usb-device-under-a-static-name
+The same needs to be done for olad not to lock USBserial interfaces for each other */
 
 var errors = [];
 
