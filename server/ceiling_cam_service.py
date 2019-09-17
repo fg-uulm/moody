@@ -468,42 +468,6 @@ else:
     t2.daemon = True
     t2.start()   
 
-'''
-# GPhoto init / testing
-context = gp.gp_context_new()
-error, camera = gp.gp_camera_new()
-error = gp.gp_camera_init(camera, context)
-error, text = gp.gp_camera_get_summary(camera, context)
-print('Summary')
-print('=======')
-print(text.text)
-error = gp.gp_camera_exit(camera, context)
-
-# required configuration will depend on camera type!
-print('Checking camera config')
-config = gp.check_result(gp.gp_camera_get_config(camera))
-OK, image_format = gp.gp_widget_get_child_by_name(config, 'imageformat')
-if OK >= gp.GP_OK:
-    value = gp.check_result(gp.gp_widget_get_value(image_format))
-    if 'raw' in value.lower():
-        print('Cannot preview raw images')
-# find the capture size class config item
-OK, capture_size_class = gp.gp_widget_get_child_by_name(
-    config, 'capturesizeclass')
-if OK >= gp.GP_OK:
-    value = gp.check_result(gp.gp_widget_get_choice(capture_size_class, 2))
-    gp.check_result(gp.gp_widget_set_value(capture_size_class, value))
-    gp.check_result(gp.gp_camera_set_config(camera, config))
-# capture preview image (not saved to camera memory card)
-print('Capturing preview image')
-camera_file = gp.check_result(gp.gp_camera_capture_preview(camera))
-file_data = gp.check_result(gp.gp_file_get_data_and_size(camera_file))
-# image?
-data = memoryview(file_data)
-print(type(data), len(data))
-print(data[:10].tolist())
-'''
-
 
 with picamera.PiCamera(resolution='720x1280', framerate=30, sensor_mode=4) as camera:
     try:
