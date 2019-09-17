@@ -416,7 +416,7 @@ logging.basicConfig(filename=None, level=logging.INFO,
         format='%(asctime)s: %(levelname)5s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
 # HTTP Server startup
-address = ('', 8082)
+address = ('', 8097)
 server = StreamingServer(address, StreamingHandler)
 t1 = threading.Thread(target=server.serve_forever)
 t1.daemon = True
