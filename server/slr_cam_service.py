@@ -18,7 +18,7 @@ import gphoto2 as gp
 from threading import Condition
 from http import server
 
-SOCKETIO_ROLE = "client"
+SOCKETIO_ROLE = "client" 
 # SOCKETIO_SERVER_ADDRESS = "192.168.2.90"
 SOCKETIO_SERVER_ADDRESS = "127.0.0.1"
 SOCKETIO_SERVER_PORT = 8099
@@ -170,14 +170,12 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
             try:
-                while True:
-                    with output.condition:
-                        output.condition.wait()
-                        with self.lock:
-                            camera_file = gp.check_result(gp.gp_camera_capture_preview(camera))
-                            file_data = gp.check_result(gp.gp_file_get_data_and_size(camera_file))
-                        # image?
-                        frame = memoryview(file_data)
+                while True:                
+                    with self.lock:
+                        camera_file = gp.check_result(gp.gp_camera_capture_preview(camera))
+                        file_data = gp.check_result(gp.gp_file_get_data_and_size(camera_file))
+                    # image?
+                    frame = memoryview(file_data)
                     self.wfile.write(b'--FRAME\r\n')
                     self.send_header('Content-Type', 'image/jpeg')
                     self.send_header('Content-Length', len(frame))
@@ -197,15 +195,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.send_header('Cache-Control', 'no-cache, private')
             self.send_header('Pragma', 'no-cache')
             self.send_header('Access-Control-Allow-Origin', '*')
-            try:
-                with output.condition:
-                    output.condition.wait()
-                    with self.lock:
-                        file_path = camera.capture(gp.GP_CAPTURE_IMAGE)
-                        print('Camera file path: {0}/{1}'.format(file_path.folder, file_path.name))
-                        print('Copying image to', '/tmp/still.jpg')
-                        camera_file = camera.file_get(file_path.folder, file_path.name, gp.GP_FILE_TYPE_NORMAL)
-                        camera_file.save('/tmp/still.jpg')
+            try:                
+                with self.lock:
+                    file_path = camera.capture(gp.GP_CAPTURE_IMAGE)
+                    print('Camera file path: {0}/{1}'.format(file_path.folder, file_path.name))
+                    print('Copying image to', '/tmp/still.jpg')
+                    camera_file = camera.file_get(file_path.folder, file_path.name, gp.GP_FILE_TYPE_NORMAL)
+                    camera_file.save('/tmp/still.jpg')
                 f = open('/tmp/still.jpg', "rb")
                 frame = f.read()
                 f.close()
@@ -466,23 +462,19 @@ if OK >= gp.GP_OK:
     gp.check_result(gp.gp_camera_set_config(camera, config))
 
 
-with picamera.PiCamera(resolution='720x1280', framerate=30, sensor_mode=4) as pcamera:
-    try:
-        pcamera.rotation = 270
-        output = StreamingOutput()
-        pcamera.start_recording(output, format='mjpeg')
+# Fire up final (hackyhacky)
+try:
+    output = StreamingOutput()
+    logging.info("Serve forever")
+    while True:
+        logging.info("--- Server is alive")
+        time.sleep(30)
 
-        logging.info("Serve forever")
-        while True:
-            logging.info("--- Server is alive")
-            time.sleep(30)
+except:
+    sys.exc_info()[0]
+    raise
 
-    except:
-        sys.exc_info()[0]
-        raise
-    
-    finally:
-        logging.info("Fail / Exit")
-        pcamera.stop_recording()
-        sioclient.destroy()
+finally:
+    logging.info("Fail / Exit")
+    sioclient.destroy()
 

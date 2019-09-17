@@ -36,7 +36,7 @@ console.log( 'Connecting to socketio server' );
 var socket = io.connect('http://'+masterServer+':'+masterServerPort, {reconnect: true});
 
 console.log( 'Connecting to Mumble server' );
-mumble.connect( 'mumble://localhost', mumbleOptions, function ( error, connection ) {
+/*mumble.connect( 'mumble://localhost', mumbleOptions, function ( error, connection ) {
     if( error ) { throw new Error( error ); }
 
     console.log( 'Connected' );
@@ -44,7 +44,7 @@ mumble.connect( 'mumble://localhost', mumbleOptions, function ( error, connectio
     connection.authenticate( 'ExampleUser' );
     connection.on( 'initialized', onInit );
     connection.on( 'voice', onVoice );
-});
+});*/
 
 //Test artnet
 artnet.set([255, 129]);
