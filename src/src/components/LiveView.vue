@@ -1,11 +1,15 @@
 <template>
   <div class="liveview">
-    <vue-splitter-v>
+    <vue-splitter-v x-class="lvsplitter">
       <template slot="left">
-        <img src="http://192.168.1.115:8082/stream.mjpg" class="preview" />
+        <div class="pane left">
+          <img src="http://192.168.1.115:8097/stream.mjpg" class="preview rot90deg" />
+        </div>
       </template>
-      <template slot="right">
-        <img src="http://192.168.1.115:8080/stream.mjpg" class="preview" />
+      <template slot="right" class="right">
+        <div class="pane right">
+          <img src="http://192.168.1.115:8098/stream.mjpg" class="preview" />
+        </div>
       </template>
     </vue-splitter-v>
   </div>
@@ -13,7 +17,7 @@
 
 <script>
 export default {
-  name: "HelloWorld",
+  name: "LiveView",
   props: {
     msg: String
   }
@@ -23,10 +27,32 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped lang="scss">
 
-.VueSplitter-Handle-item {
+.lvsplitter {
   background-color: green;
-  border: 1px solid red;
+  border: 1px solid yellow;
+  height: 100vh !important;
+}
+
+.preview {
+  width: 100%;
   height: 100vh;
+  object-fit: contain;
+}
+
+.rot90deg {
+  transform: rotate(90deg);
+}
+
+.pane {
+  height: 100%;
+}
+
+.pane.left {
+  background-color: grey;
+}
+
+.pane.right {
+  background-color: darkgrey;
 }
 
 </style>
