@@ -14,6 +14,7 @@ import socketio
 import eventlet
 import platform
 import gphoto2 as gp
+import binascii
 
 from threading import Condition
 from http import server
@@ -25,6 +26,8 @@ SOCKETIO_SERVER_PORT = 8099
 
 # Class encapsulating main camera application logic
 class CameraControl():
+    lock = threading.RLock()
+
     # Clamping Helper
     @staticmethod
     def clamp(n, minn, maxn):
@@ -154,9 +157,7 @@ class StreamingOutput(object):
 
 
 # Class for handling incoming http requests (routing to app logic)
-class StreamingHandler(server.BaseHTTPRequestHandler):
-    
-    lock = threading.RLock()
+class StreamingHandler(server.BaseHTTPRequestHandler):    
 
     def do_GET(self):                
         # Respond to mjpg GET requests
@@ -171,7 +172,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.end_headers()
             try:
                 while True:                
-                    with self.lock:
+                    with CameraControl.lock:
                         camera_file = gp.check_result(gp.gp_camera_capture_preview(camera))
                         file_data = gp.check_result(gp.gp_file_get_data_and_size(camera_file))
                     # image?
@@ -196,7 +197,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.send_header('Pragma', 'no-cache')
             self.send_header('Access-Control-Allow-Origin', '*')
             try:                
-                with self.lock:
+                with CameraControl.lock:
                     file_path = camera.capture(gp.GP_CAPTURE_IMAGE)
                     print('Camera file path: {0}/{1}'.format(file_path.folder, file_path.name))
                     print('Copying image to', '/tmp/still.jpg')
@@ -299,6 +300,19 @@ class SimoreCamNamespace(socketio.ClientNamespace):
 
     def on_disconnect(self, env=None, sid="clientMode"):
         logging.info("DISCONNECT")
+
+    def on_capture(self, data):
+         with CameraControl.lock:
+            file_path = camera.capture(gp.GP_CAPTURE_IMAGE)
+            print('Camera file path: {0}/{1}'.format(file_path.folder, file_path.name))
+            print('Copying image to', '/tmp/still.jpg')
+            camera_file = camera.file_get(file_path.folder, file_path.name, gp.GP_FILE_TYPE_NORMAL)
+            camera_file.save('/tmp/still.jpg')
+            f = open('/tmp/still.jpg', "rb")
+            frame = f.read()
+            f.close()
+            frame_str = binascii.b2a_base64(frame).decode('utf-8')
+            self.emit("picture",frame_str);
 
     def on_abspos_event(self, data):
         logging.info("SIO: AbsPos event")
@@ -412,7 +426,7 @@ class SocketIOCamClient():
 ########################
 # Main Startup Logic ###
 ########################
-logging.basicConfig(filename=None, level=logging.INFO,
+logging.basicConfig(filename=None, level=logging.WARN,
         format='%(asctime)s: %(levelname)5s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
 # HTTP Server startup

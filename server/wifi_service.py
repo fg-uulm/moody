@@ -14,7 +14,7 @@ def connect():
     print("SIO: Connected!")
 
 @sio.on('wificonnect')
-def on_message(data):
+def on_wificonnect(data):
     print('SIO: Connect to wifi '+data)
 
     # create supplicant file
@@ -33,6 +33,7 @@ def on_message(data):
         print("Installed.")
     except Exception as e:
         print("Installing failed: "+str(e))
+        sio.broadcast.emit("wificonnect_fail", data)
 
     # reset wifi PHY and everything
     proc = subprocess.Popen('sudo /etc/init.d/dhcpcd restart',shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE,stderr=subprocess.PIPE).wait()
@@ -46,8 +47,9 @@ def on_message(data):
     proc = subprocess.Popen('sudo dhclient -v wlan0',shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE,stderr=subprocess.PIPE).wait()    
     print("DHCP Leaser renewed.")
 
-    sio.emit("wificonnected", data)
+    sio.broadcast.emit("wificonnect_success", data)
+    print("Notification sent")
 
 
 # TEST
-on_message("silver")
+on_wificonnect("silver")
