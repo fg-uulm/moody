@@ -52,7 +52,7 @@ console.log( 'Connecting to Mumble server' );
 artnet.set([255, 129]);
 
 //Setup animations for direct mode
-const toFlashAnim = new DMX.Animation().add({
+var toFlashAnim = new DMX.Animation().add({
   1: flashBright,
   2: flashBright,
   3: flashBright,
@@ -61,7 +61,7 @@ const toFlashAnim = new DMX.Animation().add({
   6: flashBright
 }, 60);
 
-const toIdleAnim = new DMX.Animation().add({
+var toIdleAnim = new DMX.Animation().add({
   1: idleBright,
   2: idleBright,
   3: idleBright,
@@ -171,6 +171,31 @@ socket.on('showlevel', function(level) {
     }
 });
 
+socket.on('adjustidle', function(level) {
+    idleBright = level;
+    toIdleAnim = new DMX.Animation().add({
+      1: idleBright,
+      2: idleBright,
+      3: idleBright,
+      4: idleBright,
+      5: idleBright,
+      6: idleBright
+    }, 500);
+    toIdleAnim.run(universe);
+});
+
+
+socket.on('adjustflash', function(level) {
+    flashBright = level;
+    toFlashAnim = new DMX.Animation().add({
+      1: flashBright,
+      2: flashBright,
+      3: flashBright,
+      4: flashBright,
+      5: flashBright,
+      6: flashBright
+    }, 500);
+});
 
 //Mumble handlers
 var onInit = function() {

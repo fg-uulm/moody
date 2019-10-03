@@ -302,7 +302,8 @@ class SimoreCamNamespace(socketio.ClientNamespace):
         logging.info("DISCONNECT")
 
     def on_capture(self, data):
-         with CameraControl.lock:
+        logging.warn("SIO: Capture event")
+        with CameraControl.lock:
             file_path = camera.capture(gp.GP_CAPTURE_IMAGE)
             print('Camera file path: {0}/{1}'.format(file_path.folder, file_path.name))
             print('Copying image to', '/tmp/still.jpg')
