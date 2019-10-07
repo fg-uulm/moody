@@ -59,7 +59,7 @@ var toFlashAnim = new DMX.Animation().add({
   4: flashBright,
   5: flashBright,
   6: flashBright
-}, 60);
+}, 20);
 
 var toIdleAnim = new DMX.Animation().add({
   1: idleBright,

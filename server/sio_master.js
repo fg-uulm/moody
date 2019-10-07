@@ -26,13 +26,15 @@ io.on('connection', function (socket) {
    //Master picture taking coordinators
    socket.on('takepicture',function(msg) {
       io.emit("flashstart", null);
-      io.emit("capture", null);
+      setTimeout(function() {
+         io.emit("capture", null);
+      }, 500);      
    });
 
    socket.on('picture', function(imagedata) {
    	  console.log("Picture received: "+imagedata.length);
    	  io.emit("flashend");
-   	  io.emit('picture', imagedata);
+   	  //io.emit('picture', imagedata);
       io.emit('printjob', imagedata);
    });
 

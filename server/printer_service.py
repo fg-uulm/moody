@@ -3,6 +3,7 @@ import socketio
 import uuid
 import os
 import binascii
+import json
 
 SOCKETIO_ROLE = "client" 
 SOCKETIO_SERVER_ADDRESS = "127.0.0.1"
@@ -22,7 +23,7 @@ def printProgress(count, total, status=''):
     bar_len = 60
     filled_len = int(round(bar_len * count / float(total)))
     percents = round(100.0 * count / float(total), 1)   
-    print("Progress: "+percents+" %")
+    print("Progress: "+str(percents)+" %")
     sio.emit('print_progress',{"printer":connected_printer, "percent":percents})
 
 # SocketIO handlers - TODO
@@ -46,22 +47,27 @@ def on_printjob(data):
     #instaxImage.previewImage()
     encodedImage = instaxImage.encodeImage()
     print("Sending print command for "+'/tmp/'+tmp_name+'.jpg')
-    #myInstax.printPhoto(encodedImage, printProgress)
+    printer_obj.printPhoto(encodedImage, printProgress)
     sio.emit('print_success',{"printer":connected_printer})
     print("Printing on "+connected_printer+" successful")
-    os.remove('/tmp/'+tmp_name+'.jpg')
+    #os.remove('/tmp/'+tmp_name+'.jpg')
     print("Removing file successful")
 
 @sio.on('wificonnect_success')
 def on_wificonnect_success(data):
+    global printer_obj
     print("Connected to printer "+data["ssid"]+", getting info...")
     connected_printer = data["ssid"]
     # Instax setup / status
     printer_obj = instax.SP2(port=8080, pinCode=4782, timeout=10)
     info = printer_obj.getPrinterInformation()
     print(info)
+    sio.emit('printer_status', json.dumps(info))
 
 @sio.on('wificonnect_fail')
 def on_wificonnect_fail(data):
     print("Not connected to any printer")
     connected_printer = "none"
+
+# startup
+on_wificonnect_success({"ssid":"None"})
