@@ -166,7 +166,7 @@ socket.on('showlevel', function(level) {
           6: directObj[5]
         }, 0).run(universe);
 
-        console.log(directObj);
+        //console.log(directObj);
         //toLevelAnim.run(universe);
     }
 });

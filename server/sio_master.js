@@ -4,7 +4,7 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
 var initialConfig = {
-    isDryRun : true,
+    isDryRun : false,
     debugLevel : 5
 };
 
@@ -33,7 +33,12 @@ io.on('connection', function (socket) {
    	  console.log("Picture received: "+imagedata.length);
    	  io.emit("flashend");
    	  io.emit('picture', imagedata);
-   })
+      io.emit('printjob', imagedata);
+   });
+
+   socket.on('wificonnect_success', function(msg) {
+      io.emit('wificonnect_success', msg);
+   });
 
  });
 
