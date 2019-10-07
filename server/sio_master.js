@@ -3,10 +3,16 @@ var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
-io.on('connection', function (socket) {
- console.log('New connection:'+socket);
+var initialConfig = {
+    isDryRun : true,
+    debugLevel : 5
+};
 
- io.emit("PING", "1234");
+io.on('connection', function (socket) {
+   if(initialConfig.debugLevel > 3) console.log('New connection:'+socket);
+
+   //Send out initial config
+   io.emit("initialConfig", initialConfig);
 
    //Socket handlers
    socket.on("disconnect", () => console.log("Client disconnected: "+socket.id));
@@ -14,7 +20,7 @@ io.on('connection', function (socket) {
    //Generic broadcast handler
    socket.on('broadcast', function (msg) {
           io.emit(msg.method, msg.payload);
-          console.log(msg.method, msg.payload);
+          if(initialConfig.debugLevel > 5) console.log(msg.method, msg.payload);
     });
 
    //Master picture taking coordinators
