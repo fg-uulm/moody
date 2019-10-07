@@ -15,6 +15,7 @@
     "dmx": "^0.2.2",
     "express": "^4.17.1",
     "mumble": "^0.3.21",
+    "osc-js": "^2.0.4",
     "osc-min": "^1.1.1",
     "serialport": "^7.1.5",
     "socket.io": "^2.2.0"
