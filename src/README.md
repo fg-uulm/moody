@@ -1,4 +1,4 @@
-# src
+# moody-ui
 
 ## Project setup
 ```
