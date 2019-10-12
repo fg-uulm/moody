@@ -8,20 +8,33 @@ var initialConfig = {
     debugLevel : 5
 };
 
+var clients = [];
+
 io.on('connection', function (socket) {
    if(initialConfig.debugLevel > 3) console.log('New connection:'+socket);
 
    //Send out initial config
    io.emit("initialConfig", initialConfig);
 
+   //Register client
+   socket.on("REGISTER_CLIENT", function (clientType) {
+      clients.push({id: socket.id, type: clientType, ipv4: socket.handshake.address});
+      io.emit("CLIENT_LIST", clients);
+   });
+
    //Socket handlers
-   socket.on("disconnect", () => console.log("Client disconnected: "+socket.id));
+   socket.on("disconnect", function() {
+      clients = clients.filter(function( c ) {
+          return c.id !== socket.id;
+      });
+      console.log("Client disconnected: "+socket.id);
+   });
 
    //Generic broadcast handler
    socket.on('broadcast', function (msg) {
-          io.emit(msg.method, msg.payload);
-          if(initialConfig.debugLevel > 5) console.log(msg.method, msg.payload);
-    });
+      io.emit(msg.method, msg.payload);
+      if(initialConfig.debugLevel > 5) console.log(msg.method, msg.payload);
+   });
 
    //Master picture taking coordinators
    socket.on('takepicture',function(msg) {
