@@ -18,9 +18,9 @@ io.on('connection', function (socket) {
 
    //Register client
    socket.on("REGISTER_CLIENT", function (clientType) {
-      console.log('A ' + msg + ' registered from ' + JSON.stringify(socket.handshake.address.replace('::ffff:', '')))
+      console.log('A ' + clientType + ' registered from ' + JSON.stringify(socket.handshake.address.replace('::ffff:', '')))
       clients.push({id: socket.id, type: clientType, ipv4: socket.handshake.address.replace('::ffff:', '')});
-      console.log('A ' + msg + ' registered from ' + JSON.stringify(socket.handshake.address.replace('::ffff:', '')))
+      console.log('A ' + clientType + ' registered from ' + JSON.stringify(socket.handshake.address.replace('::ffff:', '')))
       io.sockets.clients().connected[socket.id].deviceType = clientType
       io.sockets.clients().connected[socket.id].deviceAddress = socket.handshake.address.replace('::ffff:', '')
       for (const clientId of Object.keys(io.sockets.clients().connected)) {
