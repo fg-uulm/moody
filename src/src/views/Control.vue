@@ -100,6 +100,46 @@
     </b-container>
 </template>
 
+<script>
+  import { Splitpanes, Pane } from 'splitpanes'
+  import 'splitpanes/dist/splitpanes.css'
+
+  import io from 'socket.io-client';
+
+  export default {
+    components: { 
+      Splitpanes, Pane 
+    },
+    created: function () {
+      window.addEventListener('keyup', this.onkey)
+    },
+    data: () => ({
+      socket: io(require("os").hostname()+':3001')    
+    }),
+    methods: {
+      sendMessage(msg) {
+        this.socket.emit('SEND_MESSAGE', {
+          user: "mee",
+          message: msg,
+        });
+      },
+      onkey(event){
+        this.socket.emit('KEYB_INPUT', 10);
+        console.log("Keydown "+event);
+      },
+      formatPrice(value) {
+        let val = (value/1).toFixed(2).replace('.', ',')
+        return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+      },      
+    },
+    mounted() {
+      this.socket.on('flashstart', (data) => {
+          console.log(data);
+      });
+    }
+  }
+</script>
+
 <style>
     .w-20 {
         width:20vw;

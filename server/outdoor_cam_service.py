@@ -14,20 +14,17 @@ import socketio
 import eventlet
 import platform
 import gphoto2 as gp
-import binascii
 
 from threading import Condition
 from http import server
 
-SOCKETIO_ROLE = "client" 
+SOCKETIO_ROLE = "client"
 # SOCKETIO_SERVER_ADDRESS = "192.168.2.90"
 SOCKETIO_SERVER_ADDRESS = "127.0.0.1"
 SOCKETIO_SERVER_PORT = 8099
 
 # Class encapsulating main camera application logic
 class CameraControl():
-    lock = threading.RLock()
-
     # Clamping Helper
     @staticmethod
     def clamp(n, minn, maxn):
@@ -157,11 +154,10 @@ class StreamingOutput(object):
 
 
 # Class for handling incoming http requests (routing to app logic)
-class StreamingHandler(server.BaseHTTPRequestHandler):    
-
+class StreamingHandler(server.BaseHTTPRequestHandler):
+    
     def do_GET(self):                
         # Respond to mjpg GET requests
-        # Answer request
         if self.path[:12] == '/stream.mjpg':
             self.send_response(200)
             self.send_header('Age', 0)
@@ -171,12 +167,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
             try:
-                while True:                
-                    with CameraControl.lock:
-                        camera_file = gp.check_result(gp.gp_camera_capture_preview(camera))
-                        file_data = gp.check_result(gp.gp_file_get_data_and_size(camera_file))
-                    # image?
-                    frame = memoryview(file_data)
+                while True:
+                    with output.condition:
+                        output.condition.wait()
+                        frame = output.frame
                     self.wfile.write(b'--FRAME\r\n')
                     self.send_header('Content-Type', 'image/jpeg')
                     self.send_header('Content-Length', len(frame))
@@ -188,7 +182,31 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 logging.warning(
                     'Removed streaming client %s: %s',
                     self.client_address, str(e))
-
+        if self.path[:16] == '/slr_stream.mjpg':
+            self.send_response(200)
+            self.send_header('Age', 0)
+            self.send_header('Cache-Control', 'no-cache, private')
+            self.send_header('Pragma', 'no-cache')
+            self.send_header('Content-Type', 'multipart/x-mixed-replace; boundary=FRAME')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            try:
+                while True:
+                    camera_file = gp.check_result(gp.gp_camera_capture_preview(camera))
+                    file_data = gp.check_result(gp.gp_file_get_data_and_size(camera_file))
+                    # image?
+                    data = memoryview(file_data)
+                    self.wfile.write(b'--FRAME\r\n')
+                    self.send_header('Content-Type', 'image/jpeg')
+                    self.send_header('Content-Length', len(data))
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.end_headers()
+                    self.wfile.write(data)
+                    self.wfile.write(b'\r\n')
+            except Exception as e:
+                logging.warning(
+                    'Removed streaming client %s: %s',
+                    self.client_address, str(e))
         # Respond to still jpg GET requests
         elif self.path[:10] == "/still.jpg":
             self.send_response(200)
@@ -196,16 +214,10 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.send_header('Cache-Control', 'no-cache, private')
             self.send_header('Pragma', 'no-cache')
             self.send_header('Access-Control-Allow-Origin', '*')
-            try:                
-                with CameraControl.lock:
-                    file_path = camera.capture(gp.GP_CAPTURE_IMAGE)
-                    print('Camera file path: {0}/{1}'.format(file_path.folder, file_path.name))
-                    print('Copying image to', '/tmp/still.jpg')
-                    camera_file = camera.file_get(file_path.folder, file_path.name, gp.GP_FILE_TYPE_NORMAL)
-                    camera_file.save('/tmp/still.jpg')
-                f = open('/tmp/still.jpg', "rb")
-                frame = f.read()
-                f.close()
+            try:
+                with output.condition:
+                    output.condition.wait()
+                    frame = output.frame
                 self.send_header('Content-Type', 'image/jpeg')
                 self.send_header('Content-Length', len(frame))
                 self.end_headers()
@@ -215,6 +227,27 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 logging.warning(
                     'Removed streaming client %s: %s',
                     self.client_address, str(e))        
+
+        elif self.path[:14] == "/slr_still.jpg":
+            self.send_response(200)
+            self.send_header('Age', 0)
+            self.send_header('Cache-Control', 'no-cache, private')
+            self.send_header('Pragma', 'no-cache')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            try:
+                with output.condition:
+                    output.condition.wait()
+                    frame = output.frame
+                self.send_header('Content-Type', 'image/jpeg')
+                self.send_header('Content-Length', len(frame))
+                self.end_headers()
+                self.wfile.write(frame)
+                self.wfile.write(b'\r\n')
+            except Exception as e:
+                logging.warning(
+                    'Removed streaming client %s: %s',
+                    self.client_address, str(e))        
+
 
         elif self.path[:2] == '/?':
             # Send response status code
@@ -295,25 +328,11 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 class SimoreCamNamespace(socketio.ClientNamespace):
 
     def on_connect(self, env=None, sid="clientMode"):
-        self.emit("REGISTER_CLIENT", "camslr")
+        self.emit("REGISTER_CLIENT", "camoutdoor")
         logging.info("CONNECT")
 
     def on_disconnect(self, env=None, sid="clientMode"):
         logging.info("DISCONNECT")
-
-    def on_capture(self, data):
-        logging.warn("SIO: Capture event")
-        with CameraControl.lock:
-            file_path = camera.capture(gp.GP_CAPTURE_IMAGE)
-            print('Camera file path: {0}/{1}'.format(file_path.folder, file_path.name))
-            print('Copying image to', '/tmp/still.jpg')
-            camera_file = camera.file_get(file_path.folder, file_path.name, gp.GP_FILE_TYPE_NORMAL)
-            camera_file.save('/tmp/still.jpg')
-            f = open('/tmp/still.jpg', "rb")
-            frame = f.read()
-            f.close()
-            frame_str = binascii.b2a_base64(frame).decode('utf-8')
-            self.emit("picture",frame_str);
 
     def on_abspos_event(self, data):
         logging.info("SIO: AbsPos event")
@@ -427,11 +446,11 @@ class SocketIOCamClient():
 ########################
 # Main Startup Logic ###
 ########################
-logging.basicConfig(filename=None, level=logging.WARN,
+logging.basicConfig(filename=None, level=logging.INFO,
         format='%(asctime)s: %(levelname)5s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
 # HTTP Server startup
-address = ('', 8097)
+address = ('', 8098)
 server = StreamingServer(address, StreamingHandler)
 t1 = threading.Thread(target=server.serve_forever)
 t1.daemon = True
@@ -450,46 +469,23 @@ else:
     t2.start()   
 
 
-# SLR Setup
-# GPhoto init / testing
-context = gp.gp_context_new()
-error, camera = gp.gp_camera_new()
-error = gp.gp_camera_init(camera, context)
-error, text = gp.gp_camera_get_summary(camera, context)
-print('Summary')
-print('=======')
-print(text.text)
+with picamera.PiCamera(resolution='720x1280', framerate=30, sensor_mode=4) as camera:
+    try:
+        camera.rotation = 270
+        output = StreamingOutput()
+        camera.start_recording(output, format='mjpeg')
 
-# required configuration will depend on camera type!
-print('Checking camera config')
-config = gp.check_result(gp.gp_camera_get_config(camera))
-OK, image_format = gp.gp_widget_get_child_by_name(config, 'imageformat')
-if OK >= gp.GP_OK:
-    value = gp.check_result(gp.gp_widget_get_value(image_format))
-    if 'raw' in value.lower():
-        print('Cannot preview raw images')
-# find the capture size class config item
-OK, capture_size_class = gp.gp_widget_get_child_by_name(
-    config, 'capturesizeclass')
-if OK >= gp.GP_OK:
-    value = gp.check_result(gp.gp_widget_get_choice(capture_size_class, 2))
-    gp.check_result(gp.gp_widget_set_value(capture_size_class, value))
-    gp.check_result(gp.gp_camera_set_config(camera, config))
+        logging.info("Serve forever")
+        while True:
+            logging.info("--- Server is alive")
+            time.sleep(30)
 
-
-# Fire up final (hackyhacky)
-try:
-    output = StreamingOutput()
-    logging.info("Serve forever")
-    while True:
-        logging.info("--- Server is alive")
-        time.sleep(30)
-
-except:
-    sys.exc_info()[0]
-    raise
-
-finally:
-    logging.info("Fail / Exit")
-    sioclient.destroy()
+    except:
+        sys.exc_info()[0]
+        raise
+    
+    finally:
+        logging.info("Fail / Exit")
+        camera.stop_recording()
+        sioclient.destroy()
 

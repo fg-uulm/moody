@@ -328,7 +328,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
 class SimoreCamNamespace(socketio.ClientNamespace):
 
     def on_connect(self, env=None, sid="clientMode"):
-        self.emit("REGISTER_CLIENT", "camera")
+        self.emit("REGISTER_CLIENT", "camceiling")
         logging.info("CONNECT")
 
     def on_disconnect(self, env=None, sid="clientMode"):
