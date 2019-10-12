@@ -40,7 +40,7 @@
       socket: io('192.168.2.192:8099')
     }),
     mounted() {
-      this.socket.on('camlist', (data) => {
+      this.socket.on('CLIENT_LIST', (data) => {
           console.log(data);
       });
     }

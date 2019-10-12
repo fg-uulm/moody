@@ -101,14 +101,11 @@
 </template>
 
 <script>
-  import { Splitpanes, Pane } from 'splitpanes'
-  import 'splitpanes/dist/splitpanes.css'
-
   import io from 'socket.io-client';
 
   export default {
     components: { 
-      Splitpanes, Pane 
+       
     },
     created: function () {
       window.addEventListener('keyup', this.onkey)
