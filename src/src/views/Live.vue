@@ -43,6 +43,7 @@
       this.socket.on('CLIENT_LIST', (data) => {
           console.log(data);
       });
+      this.socket.emit('REGISTER_CLIENT', 'uicontrol');
     }
   }
 </script>
