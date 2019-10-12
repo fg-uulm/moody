@@ -18,22 +18,19 @@ io.on('connection', function (socket) {
 
    //Register client
    socket.on("REGISTER_CLIENT", function (clientType) {
-      console.log('A ' + clientType + ' registered from ' + JSON.stringify(socket.handshake.address.replace('::ffff:', '')))
-      clients.push({id: socket.id, type: clientType, ipv4: socket.handshake.address.replace('::ffff:', '')});
+      //clients.push({id: socket.id, type: clientType, ipv4: socket.handshake.address.replace('::ffff:', '')});
       console.log('A ' + clientType + ' registered from ' + JSON.stringify(socket.handshake.address.replace('::ffff:', '')))
       io.sockets.clients().connected[socket.id].deviceType = clientType
       io.sockets.clients().connected[socket.id].deviceAddress = socket.handshake.address.replace('::ffff:', '')
+      clients = [];
       for (const clientId of Object.keys(io.sockets.clients().connected)) {
           try {
-              io.emit(
-                  io.sockets.clients().connected[clientId].deviceType.toUpperCase() + '_REGISTERED',
-                  { id: io.sockets.clients().connected[clientId].id, address: io.sockets.clients().connected[clientId].deviceAddress }
-              )
-              io.emit("CLIENT_LIST", clients);
+              clients.push({ id: io.sockets.clients().connected[clientId].id, type: io.sockets.clients().connected[clientId].deviceType, address: io.sockets.clients().connected[clientId].deviceAddress })              
           } catch(e) {
               console.error(clientId)
           }
       }
+      io.emit("CLIENT_LIST", clients);
    });
 
    //Socket handlers
@@ -41,6 +38,7 @@ io.on('connection', function (socket) {
       clients = clients.filter(function( c ) {
           return c.id !== socket.id;
       });
+      io.emit("CLIENT_LIST", clients);
       console.log("Client disconnected: "+socket.id);
    });
 

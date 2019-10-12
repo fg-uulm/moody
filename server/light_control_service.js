@@ -18,7 +18,7 @@ var mumbleOptions = {
     cert: fs.readFileSync( 'cert.pem' )
 };
 
-var masterServer = '127.0.0.1'; 
+var masterServer = '192.168.2.192'; 
 var masterServerPort = 8099;
 var idleBright = 80;
 var flashBright = 255;
@@ -36,17 +36,6 @@ var flashMode = false;
 //Start servers
 console.log( 'Connecting to socketio server' );
 var socket = io.connect('http://'+masterServer+':'+masterServerPort, {reconnect: true});
-
-console.log( 'Connecting to Mumble server' );
-/*mumble.connect( 'mumble://localhost', mumbleOptions, function ( error, connection ) {
-    if( error ) { throw new Error( error ); }
-
-    console.log( 'Connected' );
-
-    connection.authenticate( 'ExampleUser' );
-    connection.on( 'initialized', onInit );
-    connection.on( 'voice', onVoice );
-});*/
 
 //Test artnet
 artnet.set([255, 129]);
@@ -86,14 +75,9 @@ var directObj = [];
 
 //SIO handlers
 socket.on('connect', function(in_socket) {
-    //Handle new connections, sync state
+  //Handle new connections, sync state
   console.log("SIO Connected: "+socket);
-
-  //Pong method for keepalive
-  socket.on('PING', function(data) {
-    socket.emit('PONG', data);
-    console.log("PONGing: "+data);
-  });
+  socket.emit("REGISTER_CLIENT","lightcontrol");
 });
 
 socket.on('disconnect', function(in_socket) {

@@ -330,6 +330,7 @@ class SimoreCamNamespace(socketio.ClientNamespace):
     def on_connect(self, env=None, sid="clientMode"):
         self.emit("REGISTER_CLIENT", "camoutdoor")
         logging.info("CONNECT")
+        print("SIO CONNECT")
 
     def on_disconnect(self, env=None, sid="clientMode"):
         logging.info("DISCONNECT")
@@ -436,7 +437,13 @@ class SocketIOCamClient():
         self.sio.register_namespace(SimoreCamNamespace())
 
     def connect(self):
-        self.sio.connect('http://'+SOCKETIO_SERVER_ADDRESS+':'+str(SOCKETIO_SERVER_PORT))
+        while self.sio.sid == None:
+            try:
+                self.sio.connect('http://'+SOCKETIO_SERVER_ADDRESS+':'+str(SOCKETIO_SERVER_PORT))
+                print("Try connect...")
+            except:
+                print("Fail connect, wait 2 sec")
+                time.sleep(2)
 
     def destroy(self):
         self.sio.disconnect()
@@ -450,7 +457,7 @@ logging.basicConfig(filename=None, level=logging.INFO,
         format='%(asctime)s: %(levelname)5s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
 # HTTP Server startup
-address = ('', 8098)
+address = ('', 8096)
 server = StreamingServer(address, StreamingHandler)
 t1 = threading.Thread(target=server.serve_forever)
 t1.daemon = True

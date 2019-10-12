@@ -17,6 +17,13 @@ function map(val, low1, high1, low2, high2) {
   return (val - low1) / (high1 - low1) * (high2 - low2) + low2;
 }
 
+//Register
+socket.on('connect', function(in_socket) {
+  //Handle new connections, sync state
+  console.log("SIO Connected: "+socket);
+  socket.emit("REGISTER_CLIENT","maxtolight");
+});
+
 // Listen for OSC messages from Max and fwd them to Moodys light control
 var udp = dgram.createSocket('udp4', function(msg, rinfo) {
 

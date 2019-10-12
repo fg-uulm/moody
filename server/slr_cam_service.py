@@ -21,7 +21,7 @@ from http import server
 
 SOCKETIO_ROLE = "client" 
 # SOCKETIO_SERVER_ADDRESS = "192.168.2.90"
-SOCKETIO_SERVER_ADDRESS = "127.0.0.1"
+SOCKETIO_SERVER_ADDRESS = "192.168.2.192"
 SOCKETIO_SERVER_PORT = 8099
 
 # Class encapsulating main camera application logic
@@ -297,6 +297,7 @@ class SimoreCamNamespace(socketio.ClientNamespace):
     def on_connect(self, env=None, sid="clientMode"):
         self.emit("REGISTER_CLIENT", "camslr")
         logging.info("CONNECT")
+        print("SIO CONNECT")
 
     def on_disconnect(self, env=None, sid="clientMode"):
         logging.info("DISCONNECT")
@@ -417,7 +418,13 @@ class SocketIOCamClient():
         self.sio.register_namespace(SimoreCamNamespace())
 
     def connect(self):
-        self.sio.connect('http://'+SOCKETIO_SERVER_ADDRESS+':'+str(SOCKETIO_SERVER_PORT))
+        while self.sio.sid == None:
+            try:
+                self.sio.connect('http://'+SOCKETIO_SERVER_ADDRESS+':'+str(SOCKETIO_SERVER_PORT))
+                print("Try connect...")
+            except:
+                print("Fail connect, wait 2 sec")
+                time.sleep(2)
 
     def destroy(self):
         self.sio.disconnect()
@@ -456,9 +463,9 @@ context = gp.gp_context_new()
 error, camera = gp.gp_camera_new()
 error = gp.gp_camera_init(camera, context)
 error, text = gp.gp_camera_get_summary(camera, context)
-print('Summary')
-print('=======')
-print(text.text)
+#print('Summary')
+#print('=======')
+#print(text.text)
 
 # required configuration will depend on camera type!
 print('Checking camera config')

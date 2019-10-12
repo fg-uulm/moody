@@ -16,6 +16,12 @@ callback = function(level) {
 	socket.emit("broadcast", {method:"showlevel",payload:level});
 };
 
+socket.on('connect', function(in_socket) {
+  //Handle new connections, sync state
+  console.log("SIO Connected: "+socket);
+  socket.emit("REGISTER_CLIENT","alsasoundlevel");
+});
+
 //Process initial global config event, setup microservice
 socket.on('initialConfig', function(globalConfig) {
 	config = globalConfig;
