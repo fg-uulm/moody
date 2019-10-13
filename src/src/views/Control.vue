@@ -5,9 +5,9 @@
         <span class="header text-left">Styles</span>
       </b-col>
     </b-row>
-    <b-row class="previews justify-content-center">
-          <b-card-group deck>
-            <b-card :class="[{ active : currentEffect == getImgID(num)},{ inactive : currentEffect != getImgID(num)}]" v-bind:img-src="currentPictureSrc" v-for="num in numEffects" :key="num" :id="getImgID(num)" v-on:click="selectpic" img-top>
+    <b-row class="previews justify-content-center" id="previews">
+          <b-card-group deck :key="fullrerender">
+            <b-card :class="[{ active : currentEffect == getImgID(num)},{ inactive : currentEffect != getImgID(num)}]" v-bind:img-src="tmpimg" v-for="num in numEffects" :key="num" :id="getImgID(num)" v-on:click="selectpic" img-top>
             </b-card>
           </b-card-group>
     </b-row>    
@@ -49,7 +49,7 @@
         </div>         
         <div class="printerfilm">
             <div class="battblock_label">Film</div>
-            <div v-for="num in 10" :class="['battblock' ,{ filled : num <= p1.filmlevel }]" :key="num" :id="getBattBlockID(num)" />
+            <div v-for="num in 10" :class="['battblock' ,{ filled : num <= p1.filmlevel }]" :key="num" :id="getBattBlockID(num)">{{num}}</div>
         </div>
          <div class="printerprogress">
             <div class="battblock_label">Printing progress</div>
@@ -66,19 +66,13 @@
         </div>         
         <div class="printerfilm">
             <div class="battblock_label">Film</div>
-            <div v-for="num in 10" :class="['battblock' ,{ filled : num <= p2.filmlevel }]" :key="num" :id="getBattBlockID(num)" />
+            <div v-for="num in 10" :class="['battblock' ,{ filled : num <= p2.filmlevel }]" :key="num" :id="getBattBlockID(num)" >{{num}}</div>
         </div>
          <div class="printerprogress">
             <div class="battblock_label">Printing progress</div>
             <div v-for="num in 10" :class="['battblock' ,{ filled : num <= p2.progress }]" :key="num" :id="getBattBlockID(num)" />
         </div>     
-      </b-col>
-       <b-col class="text-left work module">
-        <div class="header">Services</div>
-        <div :class="['ministatus' ,{ ok : camStatus},{ notOk : !camStatus}]">Camera</div>
-        <div :class="['ministatus' ,{ ok : coinStatus},{ notOk : !coinStatus}]">Coins</div>
-        <div :class="['ministatus' ,{ ok : wifiStatus},{ notOk : !wifiStatus}]">Wifi</div>        
-      </b-col>
+      </b-col>       
     </b-row>
      <b-row class="fixed-bottom actions module">
       <b-col>
@@ -107,29 +101,35 @@
 
     },
     created: function () {
-      this.effects.push(function(){ this.brightness(25).render(); });
-      this.effects.push(function(){ this.greyscale().render(); });
-      this.effects.push(function(){ this.colorize(25, 180, 200, 20).render(); });
+      this.effects.push("this.brightness(0)");
+      this.effects.push(function(){ this.brightness(25) });
+      this.effects.push(function(){ this.greyscale() });
+      this.effects.push(function(){ this.colorize(25, 180, 200, 20) });
       this.effects.push(function(){ this.processKernel("Box Blur", [
           3, 1, 3,
           3, 1, 3,
           3, 1, 3
-        ]).render(); });
-      this.effects.push(function(){  this.vibrance(60).hue(87).gamma(0.4).clip(7).contrast(31).saturation(62).sepia(83).noise(5).render(); });
+        ]) });
+      this.effects.push(function(){  this.vibrance(60).hue(87).gamma(1.3).clip(7).contrast(31).saturation(62).sepia(83).noise(5) });
       
       //Initial FX / conversion to canvas      
-      window.Caman("#img1 img", this.effects[0]);
-      window.Caman("#img2 img", this.effects[1]);
-      window.Caman("#img3 img", this.effects[2]);
-      window.Caman("#img4 img", this.effects[3]);
-      window.Caman("#img5 img", this.effects[4]);       
+      window.Caman("#img1 img", function(){ this.brightness(0)});
+      window.Caman("#img2 img", function(){ this.brightness(0)});
+      window.Caman("#img3 img", function(){ this.brightness(0)});
+      window.Caman("#img4 img", function(){ this.brightness(0)});
+      window.Caman("#img5 img", function(){ this.brightness(0)});
+      window.Caman("#img6 img", function(){ this.brightness(0)});
+      window.Caman("#img7 img", function(){ this.brightness(0)});
+      console.log("Created ran again");
     },
     data: () => ({
       socket: io('192.168.2.192:8099'),
-      currentPictureSrc: "moody.png",
+      initialPictureSrc: "moody.png",
       numEffects: 7,
       effects: [],
       currentEffect: "",
+      tmpimg: "moody.png",
+      fullrerender: 0,
       currentSum: 0,
       camStatus: false,
       coinStatus: false,
@@ -176,25 +176,45 @@
       },
       selectpic(event) {
         this.currentEffect = event.target.parentNode.id;
-      }
+      },
+      updatepics() {
+        //Apply effects
+        console.log("Onload fired");
+        var targets = document.getElementById('previews').getElementsByTagName('canvas');
+        for (var i = targets.length - 1; i >= 0; i--) {
+          targets[i].getContext("2d").drawImage(this.tmpimg, 0,0);
+        }
+
+        //setTimeout(this.applyFX, 2000);         
+      },
+      applyFX() {
+        console.log("applyFX");
+        window.Caman.Store.items = {};
+        window.Caman("#img1 img", this.tmpimg, function(){ this.brightness(0).render() });
+        window.Caman("#img2 img", this.tmpimg, function(){ this.brightness(25).render() });
+        window.Caman("#img3 img", this.tmpimg, function(){ this.greyscale().render() });
+        window.Caman("#img4 img", this.tmpimg, function(){ this.colorize(25, 180, 200, 20).render() });
+        window.Caman("#img5 img", this.tmpimg, function(){ this.processKernel("Box Blur", [
+          3, 1, 3,
+          3, 1, 3,
+          3, 1, 3
+        ]).render() });     
+        window.Caman("#img6 img", function(){ this.vibrance(60).hue(87).gamma(1.3).clip(7).contrast(31).saturation(62).sepia(83).noise(5).render() });
+        window.Caman("#img7 img", function(){ this.brightness(0).render() });
+      },
     },
     mounted() {      
       //SIO handlers
       this.socket.on('CLIENT_LIST', (data) => {
         console.log(data);          
       });
-      this.socket.on('picturedownloaded', (data) => {
-        this.numEffects = 0;
-        this.currentPictureSrc = "data:image/jpeg;base64,"+data;
-        this.numEffects = 7;
-        //Apply effects
-        //setTimeout(function(){
-          window.Caman("#img1 canvas", "data:image/jpeg;base64,"+data, this.effects[0]);
-          window.Caman("#img2 canvas", "data:image/jpeg;base64,"+data, this.effects[1]);
-          window.Caman("#img3 canvas", "data:image/jpeg;base64,"+data, this.effects[2]);
-          window.Caman("#img4 canvas", "data:image/jpeg;base64,"+data, this.effects[3]);
-          window.Caman("#img5 canvas", "data:image/jpeg;base64,"+data, this.effects[4]);       
-        //}.bind(this), 2000);
+      this.socket.on('picturedownloaded', (data) => {        
+        //Conversion
+        console.log("Received new shot, converting...")
+        this.tmpimg = "data:image/jpeg;base64,"+data;
+        this.$forceUpdate();
+        this.fullrerender++;
+        this.applyFX();
       });
       this.socket.on('coin', (data) => {
           var coinval = parseFloat(data);
@@ -266,15 +286,15 @@ body {
   min-height: 10vh;
 }
 .b-critical {
-  background-color: #ee6600;
+  background-color: #cc9933;
   font-size: 2em;
   font-family: "Work Sans";
 }
 .b-red {
-  background-color: #ee0200;
+  background-color: #aa3333;
 }
 .b-green {
-  background-color: #007700;
+  background-color: #337733;
 }
 .card {
   width:200px;
@@ -326,7 +346,6 @@ body {
 }
 .active {
   border:3px solid #ffcccc;
-  background-color: #ffcccc;
 }
 .inactive {
   opacity: 0.3; 
