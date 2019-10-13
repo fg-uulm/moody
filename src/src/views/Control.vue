@@ -39,7 +39,7 @@
                 <span class="currency">{{currentSum}} Kč</span>
              </b-col>
               <b-col>
-                <b-button class="h-100 w-100"  v-on:click="resetsum">Reset</b-button>
+                <b-button class="h-100 w-100"  v-on:click="resetsum" squared >Reset</b-button>
               </b-col>
             </b-row>        
           </b-col>     
@@ -57,7 +57,7 @@
             </div>
              <div class="printerprogress">
                 <div class="battblock_label">Printing progress</div>
-                <div v-for="num in 10" :class="['battblock' ,{ filled : num <= p1.progress }]" :key="num" :id="getBattBlockID(num)" />
+                <div v-for="num in 50" :class="['battblock' ,{ filled : num <= p1.progress }]" :key="num" :id="getBattBlockID(num)" />
             </div>       
           </b-col>
           <b-col class="text-left work module" id="p2">
@@ -74,7 +74,7 @@
             </div>
              <div class="printerprogress">
                 <div class="battblock_label">Printing progress</div>
-                <div v-for="num in 10" :class="['battblock' ,{ filled : num <= p2.progress }]" :key="num" :id="getBattBlockID(num)" />
+                <div v-for="num in 50" :class="['battblock' ,{ filled : num <= p2.progress }]" :key="num" :id="getBattBlockID(num)" />
             </div>     
           </b-col>       
         </b-row>
@@ -86,10 +86,10 @@
               </b-col>
             </b-row>
             <b-row>
-              <b-button size="lg" class="mx-auto w-20 mh-10 b-critical b-red" v-on:click="ptt">PUSH TO TALK</b-button>
-              <b-button size="lg" class="mx-auto w-20 mh-10 b-critical" v-on:click="pttagain">SAY AGAIN</b-button>
-              <b-button size="lg" class="mx-auto w-20 mh-10 b-critical" v-on:click="snap">TAKE PICTURE</b-button>
-              <b-button size="lg" class="mx-auto w-20 mh-10 b-critical b-green" v-on:click="print">PRINT CURRENT</b-button>
+              <b-button size="lg" class="mx-auto w-20 mh-10 b-critical b-red" squared v-on:click="ptt">PUSH TO TALK</b-button>
+              <b-button size="lg" class="mx-auto w-20 mh-10 b-critical" squared v-on:click="pttagain">SAY AGAIN</b-button>
+              <b-button size="lg" class="mx-auto w-20 mh-10 b-critical" squared v-on:click="snap">TAKE PICTURE</b-button>
+              <b-button size="lg" class="mx-auto w-20 mh-10 b-critical b-green" squared v-on:click="print" :disabled="currentSum < 0.5">PRINT CURRENT</b-button>
               <!--- lowermost row --->
             </b-row>
           </b-col>
@@ -170,6 +170,7 @@
         console.log(canvas);
         var b64img = canvas.toDataURL("image/jpeg").replace("data:image/jpeg;base64,","");
         this.socket.emit("broadcast",{method:"printjob",payload:b64img});
+        this.currentSum = 0;
       },
       resetsum() {
         this.currentSum = 0;
@@ -256,6 +257,22 @@
             target.filmlevel = data.printCount;
             target.ok = true;
           }
+      });
+      this.socket.on('print_progress', (data) => {
+          console.log("Progress: "+data);
+          var target = null;
+          if(this.p1.connected) target = this.p1;
+          else if(this.p2.connected) target = this.p2;  
+          
+          target.progress = Math.round(data.percent/2);
+      });
+      this.socket.on('print_progress', (data) => {
+          console.log("Print success");
+          var target = null;
+          if(this.p1.connected) target = this.p1;
+          else if(this.p2.connected) target = this.p2;  
+          
+          target.progress = 0;
       });
       this.socket.on('camera_status', (data) => {
           var lines = data.split("\\n");
@@ -414,6 +431,9 @@ body {
 }
 .printerprogress .battblock {
   height:5px;
+  width:1.6%;
+  margin-left: 0px;
+  margin-right: 1px;
 }
 .printerbatt .battblock_label {
   display: inline-block;
