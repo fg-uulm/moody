@@ -27,7 +27,7 @@
        </b-col>
     </b-row>-->
     <b-row>
-      <b-col>
+      <b-col class="module">
         <div class="header">Payment</div>
         <b-row>
           <b-col class="text-left work">
@@ -35,44 +35,52 @@
             <span class="currency">{{currentSum}} Kč</span>
          </b-col>
           <b-col>
-            <b-button class="h-100 w-100">Reset</b-button>
+            <b-button class="h-100 w-100"  v-on:click="resetsum">Reset</b-button>
           </b-col>
         </b-row>        
       </b-col>     
-      <b-col class="text-left work" id="p2">
+      <b-col class="text-left work module" id="p1">
         <div class="header">Printer 1 (LEFT - GOLD)</div>
-        <div :class="['ministatus wide' ,{ ok : p1Connected},{ notOk : p2Connected}]">Connected</div>
-        <div :class="['ministatus wide' ,{ ok : p1Connected},{ notOk : p2Connected}]">OK</div>
+        <div :class="['ministatus wide' ,{ ok : p1.connected},{ notOk : p2.connected}]">Connected</div>
+        <div :class="['ministatus wide' ,{ ok : p1.connected},{ notOk : p2.connected}]">OK</div>
         <div class="printerbatt">            
-            <div v-for="num in 10" class="battblock" :key="num" :id="getBattBlockID(num)" />
+            <div v-for="num in 10" :class="['battblock' ,{ filled : num <= p1.battlevel }]" :key="num" :id="getBattBlockID(num)" />
             <div class="battblock_label">Battery</div>
-        </div>        
+        </div>         
         <div class="printerfilm">
             <div class="battblock_label">Film</div>
-            <div v-for="num in 10" class="battblock" :key="num" :id="getBattBlockID(num)" />
+            <div v-for="num in 10" :class="['battblock' ,{ filled : num <= p1.filmlevel }]" :key="num" :id="getBattBlockID(num)" />
         </div>
+         <div class="printerprogress">
+            <div class="battblock_label">Printing progress</div>
+            <div v-for="num in 10" :class="['battblock' ,{ filled : num <= p1.progress }]" :key="num" :id="getBattBlockID(num)" />
+        </div>       
       </b-col>
-      <b-col class="text-left work" id="p1">
+      <b-col class="text-left work module" id="p2">
         <div class="header">Printer 2 (RIGHT - SILVER)</div>
-        <div :class="['ministatus wide' ,{ ok : p2Connected},{ notOk : p1Connected}]">Connected</div>
-        <div :class="['ministatus wide' ,{ ok : p2Connected},{ notOk : p1Connected}]">OK</div>
+        <div :class="['ministatus wide' ,{ ok : p2.connected},{ notOk : p1.connected}]">Connected</div>
+        <div :class="['ministatus wide' ,{ ok : p2.connected},{ notOk : p1.connected}]">OK</div>
         <div class="printerbatt">            
-            <div v-for="num in 10" class="battblock" :key="num" :id="getBattBlockID(num)" />
+            <div v-for="num in 10" :class="['battblock' ,{ filled : num <= p2.battlevel }]" :key="num" :id="getBattBlockID(num)" />
             <div class="battblock_label">Battery</div>
-        </div>        
+        </div>         
         <div class="printerfilm">
             <div class="battblock_label">Film</div>
-            <div v-for="num in 10" class="battblock" :key="num" :id="getBattBlockID(num)" />
+            <div v-for="num in 10" :class="['battblock' ,{ filled : num <= p2.filmlevel }]" :key="num" :id="getBattBlockID(num)" />
         </div>
+         <div class="printerprogress">
+            <div class="battblock_label">Printing progress</div>
+            <div v-for="num in 10" :class="['battblock' ,{ filled : num <= p2.progress }]" :key="num" :id="getBattBlockID(num)" />
+        </div>     
       </b-col>
-       <b-col class="text-left work">
+       <b-col class="text-left work module">
         <div class="header">Services</div>
         <div :class="['ministatus' ,{ ok : camStatus},{ notOk : !camStatus}]">Camera</div>
         <div :class="['ministatus' ,{ ok : coinStatus},{ notOk : !coinStatus}]">Coins</div>
         <div :class="['ministatus' ,{ ok : wifiStatus},{ notOk : !wifiStatus}]">Wifi</div>        
       </b-col>
     </b-row>
-     <b-row class="fixed-bottom actions">
+     <b-row class="fixed-bottom actions module">
       <b-col>
         <b-row>
           <b-col cols="12" class="text-left">
@@ -108,7 +116,8 @@
           3, 1, 3
         ]).render(); });
       this.effects.push(function(){  this.vibrance(60).hue(87).gamma(0.4).clip(7).contrast(31).saturation(62).sepia(83).noise(5).render(); });
-      //Initial FX      
+      
+      //Initial FX / conversion to canvas      
       window.Caman("#img1 img", this.effects[0]);
       window.Caman("#img2 img", this.effects[1]);
       window.Caman("#img3 img", this.effects[2]);
@@ -117,7 +126,7 @@
     },
     data: () => ({
       socket: io('192.168.2.192:8099'),
-      currentPictureSrc: "https://dummyimage.com/300x450/300/fff&text=Style",
+      currentPictureSrc: "moody.png",
       numEffects: 7,
       effects: [],
       currentEffect: "",
@@ -125,8 +134,20 @@
       camStatus: false,
       coinStatus: false,
       wifiStatus: false,  
-      p1Connected: false,
-      p2Connected:true,    
+      p1: {
+        connected: false,
+        ok: false,
+        battlevel: 0,
+        filmlevel: 0,
+        progress: 0,
+      },
+      p2: {
+        connected: false,
+        ok: false,
+        battlevel: 0,
+        filmlevel: 0,
+        progress: 0,
+      }
     }),
     methods: {
       ptt() {
@@ -144,6 +165,9 @@
         var b64img = canvas.toDataURL("image/jpeg").replace("data:image/jpeg;base64,","");
         this.socket.emit("broadcast",{method:"printjob",payload:b64img});
       },
+      resetsum() {
+        this.currentSum = 0;
+      },
       getImgID(index) {
         return "img"+index;
       },
@@ -151,7 +175,6 @@
         return "batblock"+index;
       },
       selectpic(event) {
-        console.log(event.target.parentNode.id);
         this.currentEffect = event.target.parentNode.id;
       }
     },
@@ -165,17 +188,47 @@
         this.currentPictureSrc = "data:image/jpeg;base64,"+data;
         this.numEffects = 7;
         //Apply effects
-        window.Caman("#img1 canvas", this.effects[0]);
-        window.Caman("#img2 canvas", this.effects[1]);
-        window.Caman("#img3 canvas", this.effects[2]);
-        window.Caman("#img4 canvas", this.effects[3]);
-        window.Caman("#img5 canvas", this.effects[4]);       
-      });
-      this.socket.on('printer_status', (data) => {
-          console.log(data);
+        //setTimeout(function(){
+          window.Caman("#img1 canvas", "data:image/jpeg;base64,"+data, this.effects[0]);
+          window.Caman("#img2 canvas", "data:image/jpeg;base64,"+data, this.effects[1]);
+          window.Caman("#img3 canvas", "data:image/jpeg;base64,"+data, this.effects[2]);
+          window.Caman("#img4 canvas", "data:image/jpeg;base64,"+data, this.effects[3]);
+          window.Caman("#img5 canvas", "data:image/jpeg;base64,"+data, this.effects[4]);       
+        //}.bind(this), 2000);
       });
       this.socket.on('coin', (data) => {
-          console.log(data);
+          var coinval = parseFloat(data);
+          this.currentSum += coinval;
+      });
+      this.socket.on('printer_connected', (data) => {
+          console.log("Printer connected: "+data);
+          if(data == "gold") {
+            this.p1.connected = true;
+            this.p2.connected = false;
+          } else if(data == "silver") {
+            this.p1.connected = false;
+            this.p2.connected = true;
+          } else {
+            this.p1.connected = false;
+            this.p2.connected = false;
+          }
+      });
+      this.socket.on('printer_status', (data) => {
+          data = JSON.parse(data);
+          console.log("Printer status: "+data["battery"]+" ("+this.p1.connected+","+this.p2.connected+")");
+          var target = null;
+          if(this.p1.connected) target = this.p1;
+          else if(this.p2.connected) target = this.p2;  
+            
+          target.battlevel = data.battery;
+          if(data.printCount > 10) {
+            target.filmlevel = 0;
+            target.ok = false;
+          }
+          else {
+            target.filmlevel = data.printCount;
+            target.ok = true;
+          }
       });
       this.socket.on('camera_status', (data) => {
           var lines = data.split("\\n");
@@ -239,16 +292,17 @@ body {
   font-weight: 100;
   font-size: 0.8em;
   font-family: "Work Sans";
-  border-bottom: 1px solid white;
-  min-width: 100%;
+  border-bottom: 1px solid #666666;
+  min-width: 107%;
   text-align: left;
+  margin:0px;
   margin-bottom: 20px;
-  margin-top:40px;
-  display:inline-block;
+  margin-left:-15px;
+  display:block;
   background-color: #333333;
-  color:white;
+  color:#999999;
   padding-left:10px;
-  border-left: 40px solid white;
+  border-left: 40px solid #666666;
 }
 .ministatus {
   font-family: "Work Sans";
@@ -258,16 +312,16 @@ body {
   height:20px;
 }
 .ministatus.ok {
-  border-left: 40px solid green;
+  border-color:  green;
 }
 .ministatus.notOk {
-  border-left: 40px solid red;
+  border-color: red;
 }
 .ministatus.warn {
-  border-left: 40px solid orange;
+  border-color: orange;
 }
 .ministatus.wide {
-  border-left: 20px solid;
+  border-left-width: 20px;
   display: inline-block;
 }
 .active {
@@ -286,11 +340,17 @@ body {
 }
 .actions {
   margin-bottom: 20px;
+  margin-left:0px;
+  margin-right:0px;
+}
+.actions .header {
+  margin-left:-30px;
+  min-width:103.2%; 
 }
 .battblock {
-  width: 35px;
+  width: 32px;
   height: 45px;
-  background-color: gray;
+  background-color: #443333;
   display:inline-block;
   margin-right:5px;
   margin-left: 5px;
@@ -310,10 +370,23 @@ body {
   float:right;
   margin-top: 6px;
 }
+.printerprogress .battblock {
+  height:5px;
+}
 .printerbatt .battblock_label {
   display: inline-block;
 }
 .printerfilm {
   margin-top: 15px;
+}
+.module  {
+  background-color: #111111;
+  margin: 13px;
+  padding: 15px;
+  padding-top:0px;
+  padding-bottom: 15px;
+}
+.filled {
+  background-color: #ccffcc;
 }
 </style>
