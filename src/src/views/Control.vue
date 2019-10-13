@@ -6,10 +6,12 @@
       </b-col>
     </b-row>
     <b-row class="previews justify-content-center" id="previews">
+        <b-col cols="12" class="text-left">  
           <b-card-group deck :key="fullrerender">
             <b-card :class="[{ active : currentEffect == getImgID(num)},{ inactive : currentEffect != getImgID(num)}]" v-bind:img-src="tmpimg" v-for="num in numEffects" :key="num" :id="getImgID(num)" v-on:click="selectpic" img-top>
             </b-card>
           </b-card-group>
+        </b-col>    
     </b-row>    
     <!---<b-row>
       <b-col cols="12" class="text-left">
@@ -26,67 +28,71 @@
       ></b-form-textarea>
        </b-col>
     </b-row>-->
-    <b-row>
-      <b-col class="module">
-        <div class="header">Payment</div>
-        <b-row>
-          <b-col class="text-left work">
-            <small>Inserted sum</small><br/>
-            <span class="currency">{{currentSum}} Kč</span>
-         </b-col>
-          <b-col>
-            <b-button class="h-100 w-100"  v-on:click="resetsum">Reset</b-button>
-          </b-col>
-        </b-row>        
-      </b-col>     
-      <b-col class="text-left work module" id="p1">
-        <div class="header">Printer 1 (LEFT - GOLD)</div>
-        <div :class="['ministatus wide' ,{ ok : p1.connected},{ notOk : p2.connected}]">Connected</div>
-        <div :class="['ministatus wide' ,{ ok : p1.connected},{ notOk : p2.connected}]">OK</div>
-        <div class="printerbatt">            
-            <div v-for="num in 10" :class="['battblock' ,{ filled : num <= p1.battlevel }]" :key="num" :id="getBattBlockID(num)" />
-            <div class="battblock_label">Battery</div>
-        </div>         
-        <div class="printerfilm">
-            <div class="battblock_label">Film</div>
-            <div v-for="num in 10" :class="['battblock' ,{ filled : num <= p1.filmlevel }]" :key="num" :id="getBattBlockID(num)">{{num}}</div>
-        </div>
-         <div class="printerprogress">
-            <div class="battblock_label">Printing progress</div>
-            <div v-for="num in 10" :class="['battblock' ,{ filled : num <= p1.progress }]" :key="num" :id="getBattBlockID(num)" />
-        </div>       
-      </b-col>
-      <b-col class="text-left work module" id="p2">
-        <div class="header">Printer 2 (RIGHT - SILVER)</div>
-        <div :class="['ministatus wide' ,{ ok : p2.connected},{ notOk : p1.connected}]">Connected</div>
-        <div :class="['ministatus wide' ,{ ok : p2.connected},{ notOk : p1.connected}]">OK</div>
-        <div class="printerbatt">            
-            <div v-for="num in 10" :class="['battblock' ,{ filled : num <= p2.battlevel }]" :key="num" :id="getBattBlockID(num)" />
-            <div class="battblock_label">Battery</div>
-        </div>         
-        <div class="printerfilm">
-            <div class="battblock_label">Film</div>
-            <div v-for="num in 10" :class="['battblock' ,{ filled : num <= p2.filmlevel }]" :key="num" :id="getBattBlockID(num)" >{{num}}</div>
-        </div>
-         <div class="printerprogress">
-            <div class="battblock_label">Printing progress</div>
-            <div v-for="num in 10" :class="['battblock' ,{ filled : num <= p2.progress }]" :key="num" :id="getBattBlockID(num)" />
-        </div>     
-      </b-col>       
-    </b-row>
-     <b-row class="fixed-bottom actions module">
+    <b-row class="fixed-bottom" >
       <b-col>
         <b-row>
-          <b-col cols="12" class="text-left">
-            <span class="header text-left">Actions</span>
+          <b-col class="module">
+            <div class="header">Payment</div>
+            <b-row>
+              <b-col class="text-left work">
+                <small>Inserted sum</small><br/>
+                <span class="currency">{{currentSum}} Kč</span>
+             </b-col>
+              <b-col>
+                <b-button class="h-100 w-100"  v-on:click="resetsum">Reset</b-button>
+              </b-col>
+            </b-row>        
+          </b-col>     
+          <b-col class="text-left work module" id="p1">
+            <div class="header">Printer 1 (LEFT - GOLD)</div>
+            <div :class="['ministatus wide' ,{ ok : p1.connected},{ notOk : p2.connected}]">Con</div>
+            <div :class="['ministatus wide' ,{ ok : p1.connected},{ notOk : p2.connected}]">OK</div>
+            <div class="printerbatt">
+                <div class="battblock_label">Batt</div>                     
+                <div v-for="num in 10" :class="['battblock' ,{ filled : num <= p1.battlevel }]" :key="num" :id="getBattBlockID(num)" />            
+            </div>         
+            <div class="printerfilm">
+                <div class="battblock_label">Film</div>
+                <div v-for="num in 10" :class="['battblock' ,{ filled : num <= p1.filmlevel }]" :key="num" :id="getBattBlockID(num)">{{num}}</div>
+            </div>
+             <div class="printerprogress">
+                <div class="battblock_label">Printing progress</div>
+                <div v-for="num in 10" :class="['battblock' ,{ filled : num <= p1.progress }]" :key="num" :id="getBattBlockID(num)" />
+            </div>       
           </b-col>
+          <b-col class="text-left work module" id="p2">
+            <div class="header">Printer 2 (RIGHT - SILVER)</div>
+            <div :class="['ministatus wide' ,{ ok : p2.connected},{ notOk : p1.connected}]">Con</div>
+            <div :class="['ministatus wide' ,{ ok : p2.connected},{ notOk : p1.connected}]">OK</div>
+            <div class="printerbatt"> 
+                <div class="battblock_label">Batt</div>         
+                <div v-for="num in 10" :class="['battblock' ,{ filled : num <= p2.battlevel }]" :key="num" :id="getBattBlockID(num)" />           
+            </div>         
+            <div class="printerfilm">
+                <div class="battblock_label">Film</div>
+                <div v-for="num in 10" :class="['battblock' ,{ filled : num <= p2.filmlevel }]" :key="num" :id="getBattBlockID(num)" >{{num}}</div>
+            </div>
+             <div class="printerprogress">
+                <div class="battblock_label">Printing progress</div>
+                <div v-for="num in 10" :class="['battblock' ,{ filled : num <= p2.progress }]" :key="num" :id="getBattBlockID(num)" />
+            </div>     
+          </b-col>       
         </b-row>
-        <b-row>
-          <b-button size="lg" class="mx-auto w-20 mh-10 b-critical b-red" v-on:click="ptt">PUSH TO TALK</b-button>
-          <b-button size="lg" class="mx-auto w-20 mh-10 b-critical" v-on:click="pttagain">SAY AGAIN</b-button>
-          <b-button size="lg" class="mx-auto w-20 mh-10 b-critical" v-on:click="snap">TAKE PICTURE</b-button>
-          <b-button size="lg" class="mx-auto w-20 mh-10 b-critical b-green" v-on:click="print">PRINT CURRENT</b-button>
-          <!--- lowermost row --->
+         <b-row class="actions module">
+          <b-col>
+            <b-row>
+              <b-col cols="12" class="text-left">
+                <span class="header text-left">Actions</span>
+              </b-col>
+            </b-row>
+            <b-row>
+              <b-button size="lg" class="mx-auto w-20 mh-10 b-critical b-red" v-on:click="ptt">PUSH TO TALK</b-button>
+              <b-button size="lg" class="mx-auto w-20 mh-10 b-critical" v-on:click="pttagain">SAY AGAIN</b-button>
+              <b-button size="lg" class="mx-auto w-20 mh-10 b-critical" v-on:click="snap">TAKE PICTURE</b-button>
+              <b-button size="lg" class="mx-auto w-20 mh-10 b-critical b-green" v-on:click="print">PRINT CURRENT</b-button>
+              <!--- lowermost row --->
+            </b-row>
+          </b-col>
         </b-row>
       </b-col>
     </b-row>
@@ -201,6 +207,7 @@
         ]).render() });     
         window.Caman("#img6 img", function(){ this.vibrance(60).hue(87).gamma(1.3).clip(7).contrast(31).saturation(62).sepia(83).noise(5).render() });
         window.Caman("#img7 img", function(){ this.brightness(0).render() });
+        this.currentEffect = "img1";
       },
     },
     mounted() {      
@@ -296,9 +303,20 @@ body {
 .b-green {
   background-color: #337733;
 }
-.card {
-  max-height: 30vh;
+.card-deck {
+  overflow-x: scroll;
+  overflow-y: hidden;
+  max-height:40vh;
+  height:40vh;
+  display:-webkit-box;
+}
+.card-deck .card {
+  max-height: 40vh;
   border: 3px solid rgba(0,0,0,0);
+  margin-right:5px;
+  margin-left:5px;
+  min-width: 200px;
+  height:40vh;
 }
 .card-img-top {
   max-width: 100%;
@@ -306,8 +324,8 @@ body {
 }
 .previews {
   border-bottom:1px solid black;
-  padding-bottom: 40px;
-  padding-top: 40px;
+  padding-bottom: 5px;
+  padding-top: 5px;
   margin-left: 0px;
   margin-right: 0px;
 }
@@ -371,26 +389,28 @@ body {
 }
 .battblock {
   width: 8%;
-  height: 45px;
+  height: 33px;
   background-color: #443333;
   display:inline-block;
   margin-right:1%;
   margin-left: 1%;
 }
 .battblock_label {
-  margin-left: 5px;
+  margin-left: 1px;
+  margin-right:5px;
   vertical-align: top;
 }
 .printerbatt .battblock {
-  width: 10px;
+  width: 2%;
   height: 20px;
   margin-right:2px;
   margin-left: 2px;
 }
 .printerbatt {
-  display: inline-block;
+  display: block;
   float:right;
-  margin-top: 6px;
+  margin-top: 8px;
+  width: 35%;
 }
 .printerprogress .battblock {
   height:5px;
