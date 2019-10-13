@@ -123,7 +123,7 @@
       console.log("Created ran again");
     },
     data: () => ({
-      socket: io('192.168.2.192:8099'),
+      socket: io('192.168.2.90:8099'),
       initialPictureSrc: "moody.png",
       numEffects: 7,
       effects: [],
@@ -287,7 +287,7 @@ body {
 }
 .b-critical {
   background-color: #cc9933;
-  font-size: 2em;
+  font-size: 1.3em;
   font-family: "Work Sans";
 }
 .b-red {
@@ -297,9 +297,12 @@ body {
   background-color: #337733;
 }
 .card {
-  width:200px;
-  height: 340px;
+  max-height: 30vh;
   border: 3px solid rgba(0,0,0,0);
+}
+.card-img-top {
+  max-width: 100%;
+  max-height: 100%;
 }
 .previews {
   border-bottom:1px solid black;
@@ -313,7 +316,7 @@ body {
   font-size: 0.8em;
   font-family: "Work Sans";
   border-bottom: 1px solid #666666;
-  min-width: 107%;
+  min-width: 100%;
   text-align: left;
   margin:0px;
   margin-bottom: 20px;
@@ -367,12 +370,12 @@ body {
   min-width:103.2%; 
 }
 .battblock {
-  width: 32px;
+  width: 8%;
   height: 45px;
   background-color: #443333;
   display:inline-block;
-  margin-right:5px;
-  margin-left: 5px;
+  margin-right:1%;
+  margin-left: 1%;
 }
 .battblock_label {
   margin-left: 5px;
