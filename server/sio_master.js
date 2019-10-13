@@ -56,11 +56,14 @@ io.on('connection', function (socket) {
       }, 500);      
    });
 
+   socket.on('captured', function(imagedata) {
+      io.emit("flashend");
+   });
+
    socket.on('picture', function(imagedata) {
-   	  console.log("Picture received: "+imagedata.length);
-   	  io.emit("flashend");
-   	  //io.emit('picture', imagedata);
-      io.emit('printjob', imagedata);
+   	  console.log("Picture received: "+imagedata.length);   	  
+   	  io.emit('picturedownloaded', imagedata);
+      //io.emit('printjob', imagedata);
    });
 
    socket.on('wificonnect_success', function(msg) {

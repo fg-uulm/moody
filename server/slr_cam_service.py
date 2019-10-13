@@ -16,8 +16,10 @@ import platform
 import gphoto2 as gp
 import binascii
 
+from io import BytesIO
 from threading import Condition
 from http import server
+from PIL import Image
 
 SOCKETIO_ROLE = "client" 
 # SOCKETIO_SERVER_ADDRESS = "192.168.2.90"
@@ -177,12 +179,20 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                         file_data = gp.check_result(gp.gp_file_get_data_and_size(camera_file))
                     # image?
                     frame = memoryview(file_data)
+
+                    s_file_jpgdata = BytesIO(frame)
+                    s_im = Image.open(s_file_jpgdata)
+                    s_out = s_im.transpose(Image.ROTATE_270)
+                    buffer = BytesIO()
+                    s_out.save(buffer,format="JPEG")                 
+                    s_outdata = buffer.getvalue()
+                    
                     self.wfile.write(b'--FRAME\r\n')
                     self.send_header('Content-Type', 'image/jpeg')
-                    self.send_header('Content-Length', len(frame))
+                    self.send_header('Content-Length', len(s_outdata))
                     self.send_header('Access-Control-Allow-Origin', '*')
                     self.end_headers()
-                    self.wfile.write(frame)
+                    self.wfile.write(s_outdata)
                     self.wfile.write(b'\r\n')
             except Exception as e:
                 logging.warning(
@@ -308,12 +318,25 @@ class SimoreCamNamespace(socketio.ClientNamespace):
             file_path = camera.capture(gp.GP_CAPTURE_IMAGE)
             print('Camera file path: {0}/{1}'.format(file_path.folder, file_path.name))
             print('Copying image to', '/tmp/still.jpg')
+            self.emit("captured","null");
             camera_file = camera.file_get(file_path.folder, file_path.name, gp.GP_FILE_TYPE_NORMAL)
             camera_file.save('/tmp/still.jpg')
             f = open('/tmp/still.jpg', "rb")
             frame = f.read()
             f.close()
-            frame_str = binascii.b2a_base64(frame).decode('utf-8')
+            print('Reading to file data')
+            file_jpgdata = BytesIO(frame)
+            im = Image.open(file_jpgdata)
+            print('Transposing')
+            out = im.transpose(Image.ROTATE_270)
+            size = 600,900
+            out.thumbnail(size)
+            print('Coding and sending')
+            buffer = BytesIO()
+            out.save(buffer,format="JPEG")                 
+            outdata = buffer.getvalue()
+            frame_str = binascii.b2a_base64(outdata).decode('utf-8')
+            print('Emit')
             self.emit("picture",frame_str);
 
     def on_abspos_event(self, data):
