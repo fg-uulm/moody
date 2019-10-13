@@ -34,7 +34,6 @@ var socket = io.connect('http://'+masterServer+':'+masterServerPort, {reconnect:
 
 //Pi / Win detection for serial device
 if(isPi()) {
-    if(fs.existsSync('/dev/ttyUSB1')) serdev = '/dev/ttyUSB1';
     console.log("RPi Mode");
 } else {
     serdev = "COM3";

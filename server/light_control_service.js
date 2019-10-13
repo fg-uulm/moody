@@ -11,7 +11,7 @@ const artnet = require('artnet')(artnetOptions);
 const dmx = new DMX();
 //const universe = dmx.addUniverse('demo', 'null');
 var A = dmx.animation;
-var universe = dmx.addUniverse('demo', 'enttec-usb-dmx-pro', '/dev/ttyUSB0') //uncomment for production
+var universe = dmx.addUniverse('demo', 'enttec-usb-dmx-pro', '/dev/dmx_uart') //uncomment for production
 
 var mumbleOptions = {
     key: fs.readFileSync( 'key.pem' ),
