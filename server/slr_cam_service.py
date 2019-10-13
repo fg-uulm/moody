@@ -355,6 +355,7 @@ class SimoreCamNamespace(socketio.ClientNamespace):
         self.statusHelper()
         
         slrStream.requestShot()
+        self.emit("captured","null");
 
         f = open('/tmp/still.jpg', "rb")
         frame = f.read()
