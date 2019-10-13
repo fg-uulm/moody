@@ -87,6 +87,14 @@ io.on('connection', function (socket) {
       io.emit('printer_connected', msg);
    });
 
+   socket.on('print_progress', function(msg) {
+      io.emit('print_progress', msg);
+   });
+
+   socket.on('print_success', function(msg) {
+      io.emit('print_success', msg);
+   });
+
    socket.on('coin', function(msg) {
       io.emit('coin', msg);
    });

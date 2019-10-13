@@ -15,6 +15,7 @@ SOCKETIO_SERVER_PORT = 8099
 connected_printer = "none"
 info = None
 printer_obj = None
+printing = False
 
 # SocketIO setup
 sio = socketio.Client()
@@ -35,7 +36,9 @@ def printProgress(count, total, status=''):
 def on_printjob(data):
     global printer_obj
     global connected_printer
+    global printing
     print('Print job received')
+    printing = True
     info = printer_obj.getPrinterInformation()
     sio.emit('printer_status', json.dumps(info))
     # save data to tmp jpg
@@ -55,9 +58,10 @@ def on_printjob(data):
     #instaxImage.previewImage()
     encodedImage = instaxImage.encodeImage()
     print("Sending print command for "+'/tmp/'+tmp_name+'.jpg')
-    #printer_obj.printPhoto(encodedImage, printProgress)
+    printer_obj.printPhoto(encodedImage, printProgress)
     sio.emit('print_success',{"printer":connected_printer})
     print("Printing on "+connected_printer+" successful")
+    printing = False
     #os.remove('/tmp/'+tmp_name+'.jpg')
     print("Removing file successful")
     info = printer_obj.getPrinterInformation()
@@ -92,6 +96,7 @@ def on_wificonnect_success(data):
         print(traceback.format_exc())
         print("Trying again in some secs")
         time.sleep(3)
+        on_wificonnect_success(data)
 
 @sio.on('wificonnect_fail')
 def on_wificonnect_fail(data):
@@ -103,8 +108,10 @@ def on_request_status(data):
     print("Status request")
     global printer_obj
     global connected_printer
+    global printing
 
-    if(connected_printer == "None"): 
+    if(connected_printer == "None" or printing == True): 
+        print("Cancel status request")
         return
 
     try:
@@ -113,11 +120,12 @@ def on_request_status(data):
         sio.emit('printer_connected', connected_printer)
         sio.emit('printer_status', json.dumps(info))
     except:
+        print("Status failed")
         #if(printer_obj != None):
             #print("Closing old printer obj")
             #printer_obj.close()
-        print("Creating new printer obj")
-        printer_obj = instax.SP2(port=8080, pinCode=4782, timeout=10)
+        #print("Creating new printer obj")
+        #printer_obj = instax.SP2(port=8080, pinCode=4782, timeout=10)
 
 # startup
 on_wificonnect_success({"ssid":"silver"})
