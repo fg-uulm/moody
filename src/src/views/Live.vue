@@ -4,7 +4,7 @@
       <splitpanes class="default-theme vh-100">
         <pane size=40 min-size="10" class="pane">
           <div class="vh-100">
-            <img v-bind:src="slr_src" class="contain" id="camslr" style="transform:rotate(90deg) scale(1.9);" />
+            <img v-bind:src="slr_src" class="contain" id="camslr" />
           </div>          
         </pane>
         <pane size=30 class="pane">
