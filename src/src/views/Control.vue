@@ -102,7 +102,10 @@
         this.socket.emit("takepicture","");
       },
       print() {
-
+        var canvas = document.getElementById(this.currentEffect).getElementsByTagName('canvas')[0];;
+        console.log(canvas);
+        var b64img = canvas.toDataURL("image/jpeg").replace("data:image/jpeg;base64,","");
+        this.socket.emit("broadcast",{method:"printjob",payload:b64img});
       },
       getID(index) {
         return "img"+index;
