@@ -77,7 +77,7 @@ def on_wificonnect_success(data):
     connected_printer = "None"
     try:
         print("Trying to connect...")
-        time.sleep(1)
+        time.sleep(3)
         #if(printer_obj != None):
             #printer_obj.close()
         # Instax setup / status
@@ -90,8 +90,8 @@ def on_wificonnect_success(data):
         print("Connected")
     except:
         print(traceback.format_exc())
-        time.sleep(3)
         print("Trying again in some secs")
+        time.sleep(3)
 
 @sio.on('wificonnect_fail')
 def on_wificonnect_fail(data):

@@ -2,6 +2,7 @@ import socketio
 import subprocess
 from netifaces import AF_INET, AF_INET6, AF_LINK, AF_PACKET, AF_BRIDGE
 import netifaces as ni
+import time
 
 SOCKETIO_ROLE = "client" 
 SOCKETIO_SERVER_ADDRESS = "192.168.188.55"
@@ -40,16 +41,18 @@ def on_wificonnect(data):
         print("DHCPCD restarted.")
 
         # reset dhcp
-        proc = subprocess.Popen('sudo dhclient -v -r wlan0',shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE,stderr=subprocess.PIPE).wait(5)    
-        print("DHCP Lease released.")
+        #proc = subprocess.Popen('sudo dhclient -v -r wlan0',shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE,stderr=subprocess.PIPE).wait(5)    
+        #print("DHCP Lease released.")
 
         # renew dhcp
-        proc = subprocess.Popen('sudo dhclient -v wlan0',shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE,stderr=subprocess.PIPE).wait(15)    
-        print("DHCP Lease renewed.")
+        #proc = subprocess.Popen('sudo dhclient -v wlan0',shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE,stderr=subprocess.PIPE).wait(15)    
+        #print("DHCP Lease renewed.")
 
         # reset wifi PHY, for real
         proc = subprocess.Popen('sudo ifconfig wlan0 down && sudo ifconfig wlan0 up',shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE,stderr=subprocess.PIPE).wait(5)
         print("ifupdown.")
+
+        time.sleep(5)
 
         ipAddr = ni.ifaddresses('wlan0')[AF_INET][0]['addr'];
         print("New IP is "+ipAddr)
