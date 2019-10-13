@@ -37,7 +37,7 @@
     },
     data: () => ({
       //socket: io(require("os").hostname()+':3001')    
-      socket: io('192.168.2.90:8099'),
+      socket: io('192.168.188.55:8099'),
       slr_src: "https://dummyimage.com/720x1280/004/fff&text=Cam+SLR",
       ceiling_src: "https://dummyimage.com/720x1280/004/fff&text=Cam+Ceiling",
       outdoor_src: "https://dummyimage.com/720x1280/004/fff&text=Cam+Outdoor"

@@ -9,7 +9,7 @@ import sys
 import traceback
 
 SOCKETIO_ROLE = "client" 
-SOCKETIO_SERVER_ADDRESS = "127.0.0.1"
+SOCKETIO_SERVER_ADDRESS = "192.168.188.55"
 SOCKETIO_SERVER_PORT = 8099
 
 connected_printer = "none"

@@ -4,7 +4,7 @@ from netifaces import AF_INET, AF_INET6, AF_LINK, AF_PACKET, AF_BRIDGE
 import netifaces as ni
 
 SOCKETIO_ROLE = "client" 
-SOCKETIO_SERVER_ADDRESS = "127.0.0.1"
+SOCKETIO_SERVER_ADDRESS = "192.168.188.55"
 SOCKETIO_SERVER_PORT = 8099
 
 sio = socketio.Client()

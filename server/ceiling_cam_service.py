@@ -20,7 +20,7 @@ from http import server
 
 SOCKETIO_ROLE = "client"
 # SOCKETIO_SERVER_ADDRESS = "192.168.2.90"
-SOCKETIO_SERVER_ADDRESS = "192.168.2.192"
+SOCKETIO_SERVER_ADDRESS = "192.168.188.55"
 SOCKETIO_SERVER_PORT = 8099
 
 # Class encapsulating main camera application logic

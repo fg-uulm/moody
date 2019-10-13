@@ -21,7 +21,7 @@ The same needs to be done for olad not to lock USBserial interfaces for each oth
 
 var errors = [];
 
-var masterServer = '127.0.0.1'; 
+var masterServer = '192.168.188.55'; 
 var masterServerPort = 8099;
 
 /*

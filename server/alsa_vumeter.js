@@ -1,7 +1,7 @@
 const io = require('socket.io-client');
 const { spawn } = require('child_process');
 
-var masterServer = '127.0.0.1'; 
+var masterServer = '192.168.188.55'; 
 var masterServerPort = 8099;
 var config;
 

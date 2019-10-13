@@ -4,7 +4,7 @@ var io = require('socket.io-client');
 
 var remote;
 
-var masterServer = '192.168.2.192'; 
+var masterServer = '192.168.188.55'; 
 var masterServerPort = 8099;
 
 var lowerLimit = -70;
