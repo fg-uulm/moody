@@ -4,6 +4,9 @@ import uuid
 import os
 import binascii
 import json
+import time
+import sys
+import traceback
 
 SOCKETIO_ROLE = "client" 
 SOCKETIO_SERVER_ADDRESS = "127.0.0.1"
@@ -19,6 +22,7 @@ sio.connect('http://'+SOCKETIO_SERVER_ADDRESS+':'+str(SOCKETIO_SERVER_PORT))
 
 # Printer progress callback
 def printProgress(count, total, status=''):
+    global connected_printer
     print(status)
     bar_len = 60
     filled_len = int(round(bar_len * count / float(total)))
@@ -29,7 +33,11 @@ def printProgress(count, total, status=''):
 # SocketIO handlers - TODO
 @sio.on('printjob')
 def on_printjob(data):
+    global printer_obj
+    global connected_printer
     print('Print job received')
+    info = printer_obj.getPrinterInformation()
+    sio.emit('printer_status', json.dumps(info))
     # save data to tmp jpg
     tmp_name = str(uuid.uuid4())
     f = open('/tmp/'+tmp_name+'.jpg', 'w+b')
@@ -47,27 +55,69 @@ def on_printjob(data):
     #instaxImage.previewImage()
     encodedImage = instaxImage.encodeImage()
     print("Sending print command for "+'/tmp/'+tmp_name+'.jpg')
-    printer_obj.printPhoto(encodedImage, printProgress)
+    #printer_obj.printPhoto(encodedImage, printProgress)
     sio.emit('print_success',{"printer":connected_printer})
     print("Printing on "+connected_printer+" successful")
     #os.remove('/tmp/'+tmp_name+'.jpg')
     print("Removing file successful")
+    info = printer_obj.getPrinterInformation()
+    sio.emit('printer_status', json.dumps(info))
+
+@sio.on('wificonnect')
+def on_wificonnect(data):
+    global connected_printer
+    print("Not connected to printer")
+    connected_printer = "None"
 
 @sio.on('wificonnect_success')
 def on_wificonnect_success(data):
     global printer_obj
-    print("Connected to printer "+data["ssid"]+", getting info...")
-    connected_printer = data["ssid"]
-    # Instax setup / status
-    printer_obj = instax.SP2(port=8080, pinCode=4782, timeout=10)
-    info = printer_obj.getPrinterInformation()
-    print(info)
-    sio.emit('printer_status', json.dumps(info))
+    global connected_printer
+    print("Connected to printer "+data["ssid"]+" wifi, getting info...")
+    connected_printer = "None"
+    try:
+        print("Trying to connect...")
+        time.sleep(1)
+        #if(printer_obj != None):
+            #printer_obj.close()
+        # Instax setup / status
+        printer_obj = instax.SP2(port=8080, pinCode=4782, timeout=10)
+        info = printer_obj.getPrinterInformation()
+        print(info)
+        connected_printer = data["ssid"]
+        sio.emit('printer_connected', connected_printer)
+        sio.emit('printer_status', json.dumps(info))            
+        print("Connected")
+    except:
+        print(traceback.format_exc())
+        time.sleep(3)
+        print("Trying again in some secs")
 
 @sio.on('wificonnect_fail')
 def on_wificonnect_fail(data):
     print("Not connected to any printer")
-    connected_printer = "none"
+    connected_printer = "None"
+
+@sio.on('request_status')
+def on_request_status(data):
+    print("Status request")
+    global printer_obj
+    global connected_printer
+
+    if(connected_printer == "None"): 
+        return
+
+    try:
+        info = printer_obj.getPrinterInformation()
+        print(info)
+        sio.emit('printer_connected', connected_printer)
+        sio.emit('printer_status', json.dumps(info))
+    except:
+        #if(printer_obj != None):
+            #print("Closing old printer obj")
+            #printer_obj.close()
+        print("Creating new printer obj")
+        printer_obj = instax.SP2(port=8080, pinCode=4782, timeout=10)
 
 # startup
-on_wificonnect_success({"ssid":"None"})
+on_wificonnect_success({"ssid":"silver"})

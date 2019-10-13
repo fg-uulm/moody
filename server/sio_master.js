@@ -16,6 +16,11 @@ io.on('connection', function (socket) {
    //Send out initial config
    io.emit("initialConfig", initialConfig);
 
+   //Regular alive / status polling
+    setInterval(function(){
+      socket.emit("request_status","null");
+    }.bind(this), 10000);
+
    //Register client
    socket.on("REGISTER_CLIENT", function (clientType) {
       //clients.push({id: socket.id, type: clientType, ipv4: socket.handshake.address.replace('::ffff:', '')});
@@ -70,8 +75,25 @@ io.on('connection', function (socket) {
       io.emit('wificonnect_success', msg);
    });
 
+   socket.on('camera_status', function(msg) {
+      io.emit('camera_status', msg);
+   });
+
+   socket.on('printer_status', function(msg) {
+      io.emit('printer_status', msg);
+   });
+
+   socket.on('printer_connected', function(msg) {
+      io.emit('printer_connected', msg);
+   });
+
+   socket.on('coin', function(msg) {
+      io.emit('coin', msg);
+   });
+
  });
 
+//Server startup
 http.listen(8099, function () {
   console.log('listening on *:8099');
 });

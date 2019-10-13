@@ -21,6 +21,7 @@ def on_wificonnect(data):
 
     # create supplicant file
     try:
+        sio.emit('printer_connected', 'None')
         # Delete old file
         print("Delete old file")
         proc = subprocess.Popen('sudo rm /etc/wpa_supplicant/wpa_supplicant.conf',shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE,stderr=subprocess.PIPE).wait(5)
@@ -43,8 +44,12 @@ def on_wificonnect(data):
         print("DHCP Lease released.")
 
         # renew dhcp
-        proc = subprocess.Popen('sudo dhclient -v wlan0',shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE,stderr=subprocess.PIPE).wait(10)    
-        print("DHCP Leaser renewed.")
+        proc = subprocess.Popen('sudo dhclient -v wlan0',shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE,stderr=subprocess.PIPE).wait(15)    
+        print("DHCP Lease renewed.")
+
+        # reset wifi PHY, for real
+        proc = subprocess.Popen('sudo ifconfig wlan0 down && sudo ifconfig wlan0 up',shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE,stderr=subprocess.PIPE).wait(5)
+        print("ifupdown.")
 
         ipAddr = ni.ifaddresses('wlan0')[AF_INET][0]['addr'];
         print("New IP is "+ipAddr)

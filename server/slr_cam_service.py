@@ -15,6 +15,7 @@ import eventlet
 import platform
 import gphoto2 as gp
 import binascii
+from slr_video_stream import SLRVideoStream
 
 from io import BytesIO
 from threading import Condition
@@ -25,6 +26,38 @@ SOCKETIO_ROLE = "client"
 # SOCKETIO_SERVER_ADDRESS = "192.168.2.90"
 SOCKETIO_SERVER_ADDRESS = "192.168.2.192"
 SOCKETIO_SERVER_PORT = 8099
+context = None
+camera = None
+
+def initCamera():
+    global camera
+    global context
+    print("Init camera")
+    # SLR Setup
+    # GPhoto init / testing
+    context = gp.gp_context_new()
+    error, camera = gp.gp_camera_new()
+    error = gp.gp_camera_init(camera, context)
+    error, text = gp.gp_camera_get_summary(camera, context)
+    #print('Summary')
+    #print('=======')
+    #print(text.text)
+
+    # required configuration will depend on camera type!
+    print('Checking camera config')
+    config = gp.check_result(gp.gp_camera_get_config(camera))
+    OK, image_format = gp.gp_widget_get_child_by_name(config, 'imageformat')
+    if OK >= gp.GP_OK:
+        value = gp.check_result(gp.gp_widget_get_value(image_format))
+        if 'raw' in value.lower():
+            print('Cannot preview raw images')
+    # find the capture size class config item
+    OK, capture_size_class = gp.gp_widget_get_child_by_name(
+        config, 'capturesizeclass')
+    if OK >= gp.GP_OK:
+        value = gp.check_result(gp.gp_widget_get_choice(capture_size_class, 2))
+        gp.check_result(gp.gp_widget_set_value(capture_size_class, value))
+        gp.check_result(gp.gp_camera_set_config(camera, config))
 
 # Class encapsulating main camera application logic
 class CameraControl():
@@ -174,13 +207,9 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.end_headers()
             try:
                 while True:                
-                    with CameraControl.lock:
-                        camera_file = gp.check_result(gp.gp_camera_capture_preview(camera))
-                        file_data = gp.check_result(gp.gp_file_get_data_and_size(camera_file))
-                    # image?
-                    frame = memoryview(file_data)
-
+                    frame = slrStream.read()
                     s_file_jpgdata = BytesIO(frame)
+
                     s_im = Image.open(s_file_jpgdata)
                     s_out = s_im.transpose(Image.ROTATE_270)
                     buffer = BytesIO()
@@ -308,36 +337,43 @@ class SimoreCamNamespace(socketio.ClientNamespace):
         self.emit("REGISTER_CLIENT", "camslr")
         logging.info("CONNECT")
         print("SIO CONNECT")
+        self.statusHelper()
 
     def on_disconnect(self, env=None, sid="clientMode"):
         logging.info("DISCONNECT")
 
+    def statusHelper(self):
+        with CameraControl.lock:
+            global camera
+            if(camera is not None):
+                error, text = gp.gp_camera_get_summary(camera, context)
+                #print(text.text)
+                self.emit("camera_status", json.dumps(text.text))
+
     def on_capture(self, data):
         logging.warn("SIO: Capture event")
-        with CameraControl.lock:
-            file_path = camera.capture(gp.GP_CAPTURE_IMAGE)
-            print('Camera file path: {0}/{1}'.format(file_path.folder, file_path.name))
-            print('Copying image to', '/tmp/still.jpg')
-            self.emit("captured","null");
-            camera_file = camera.file_get(file_path.folder, file_path.name, gp.GP_FILE_TYPE_NORMAL)
-            camera_file.save('/tmp/still.jpg')
-            f = open('/tmp/still.jpg', "rb")
-            frame = f.read()
-            f.close()
-            print('Reading to file data')
-            file_jpgdata = BytesIO(frame)
-            im = Image.open(file_jpgdata)
-            print('Transposing')
-            out = im.transpose(Image.ROTATE_270)
-            size = 600,900
-            out.thumbnail(size)
-            print('Coding and sending')
-            buffer = BytesIO()
-            out.save(buffer,format="JPEG")                 
-            outdata = buffer.getvalue()
-            frame_str = binascii.b2a_base64(outdata).decode('utf-8')
-            print('Emit')
-            self.emit("picture",frame_str);
+        self.statusHelper()
+        
+        slrStream.requestShot()
+
+        f = open('/tmp/still.jpg', "rb")
+        frame = f.read()
+        f.close()
+        print('Reading to file data')
+        file_jpgdata = BytesIO(frame)
+        im = Image.open(file_jpgdata)
+        print('Transposing')
+        out = im.transpose(Image.ROTATE_270)
+        size = 600,900
+        out.thumbnail(size)
+        print('Coding and sending')
+        buffer = BytesIO()
+        out.save(buffer,format="JPEG")                 
+        outdata = buffer.getvalue()
+        frame_str = binascii.b2a_base64(outdata).decode('utf-8')
+        print('Emit')
+        self.emit("picture",frame_str);
+
 
     def on_abspos_event(self, data):
         logging.info("SIO: AbsPos event")
@@ -460,6 +496,10 @@ class SocketIOCamClient():
 logging.basicConfig(filename=None, level=logging.WARN,
         format='%(asctime)s: %(levelname)5s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
+# init cam
+#initCamera()
+slrStream = SLRVideoStream().start()
+
 # HTTP Server startup
 address = ('', 8097)
 server = StreamingServer(address, StreamingHandler)
@@ -479,34 +519,6 @@ else:
     t2.daemon = True
     t2.start()   
 
-
-# SLR Setup
-# GPhoto init / testing
-context = gp.gp_context_new()
-error, camera = gp.gp_camera_new()
-error = gp.gp_camera_init(camera, context)
-error, text = gp.gp_camera_get_summary(camera, context)
-#print('Summary')
-#print('=======')
-#print(text.text)
-
-# required configuration will depend on camera type!
-print('Checking camera config')
-config = gp.check_result(gp.gp_camera_get_config(camera))
-OK, image_format = gp.gp_widget_get_child_by_name(config, 'imageformat')
-if OK >= gp.GP_OK:
-    value = gp.check_result(gp.gp_widget_get_value(image_format))
-    if 'raw' in value.lower():
-        print('Cannot preview raw images')
-# find the capture size class config item
-OK, capture_size_class = gp.gp_widget_get_child_by_name(
-    config, 'capturesizeclass')
-if OK >= gp.GP_OK:
-    value = gp.check_result(gp.gp_widget_get_choice(capture_size_class, 2))
-    gp.check_result(gp.gp_widget_set_value(capture_size_class, value))
-    gp.check_result(gp.gp_camera_set_config(camera, config))
-
-
 # Fire up final (hackyhacky)
 try:
     output = StreamingOutput()
@@ -522,4 +534,3 @@ except:
 finally:
     logging.info("Fail / Exit")
     sioclient.destroy()
-
