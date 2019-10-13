@@ -13,7 +13,6 @@ import engineio
 import socketio
 import eventlet
 import platform
-import gphoto2 as gp
 
 from threading import Condition
 from http import server
@@ -181,32 +180,7 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             except Exception as e:
                 logging.warning(
                     'Removed streaming client %s: %s',
-                    self.client_address, str(e))
-        if self.path[:16] == '/slr_stream.mjpg':
-            self.send_response(200)
-            self.send_header('Age', 0)
-            self.send_header('Cache-Control', 'no-cache, private')
-            self.send_header('Pragma', 'no-cache')
-            self.send_header('Content-Type', 'multipart/x-mixed-replace; boundary=FRAME')
-            self.send_header('Access-Control-Allow-Origin', '*')
-            self.end_headers()
-            try:
-                while True:
-                    camera_file = gp.check_result(gp.gp_camera_capture_preview(camera))
-                    file_data = gp.check_result(gp.gp_file_get_data_and_size(camera_file))
-                    # image?
-                    data = memoryview(file_data)
-                    self.wfile.write(b'--FRAME\r\n')
-                    self.send_header('Content-Type', 'image/jpeg')
-                    self.send_header('Content-Length', len(data))
-                    self.send_header('Access-Control-Allow-Origin', '*')
-                    self.end_headers()
-                    self.wfile.write(data)
-                    self.wfile.write(b'\r\n')
-            except Exception as e:
-                logging.warning(
-                    'Removed streaming client %s: %s',
-                    self.client_address, str(e))
+                    self.client_address, str(e))        
         # Respond to still jpg GET requests
         elif self.path[:10] == "/still.jpg":
             self.send_response(200)
