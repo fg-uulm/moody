@@ -86,10 +86,11 @@
               </b-col>
             </b-row>
             <b-row>
-              <b-button size="lg" class="mx-auto w-20 mh-10 b-critical b-red" squared v-on:click="ptt">PUSH TO TALK</b-button>
-              <b-button size="lg" class="mx-auto w-20 mh-10 b-critical" squared v-on:click="pttagain">SAY AGAIN</b-button>
+              <b-button size="lg" class="mx-auto w-20 mh-10 b-critical b-red" squared v-on:touchstart="pttStart" v-on:mousedown="pttStart" v-on:touchend="pttEnd" v-on:mouseup="pttEnd">PUSH TO TALK</b-button>
+              <b-button size="lg" class="mx-auto w-20 mh-10 b-critical" squared v-on:click="pttAgain">SAY AGAIN</b-button>
               <b-button size="lg" class="mx-auto w-20 mh-10 b-critical" squared v-on:click="snap">TAKE PICTURE</b-button>
-              <b-button size="lg" class="mx-auto w-20 mh-10 b-critical b-green" squared v-on:click="print" :disabled="currentSum < 0.5">PRINT CURRENT</b-button>
+              <!-- <b-button size="lg" class="mx-auto w-20 mh-10 b-critical b-green" squared v-on:click="print" :disabled="currentSum < 0.5">PRINT CURRENT</b-button> -->
+              <b-button size="lg" class="mx-auto w-20 mh-10 b-critical b-green" squared v-on:click="print">PRINT CURRENT</b-button>
               <!--- lowermost row --->
             </b-row>
           </b-col>
@@ -156,11 +157,16 @@
       }
     }),
     methods: {
-      ptt() {
-        //this.socket.emit("ptt","100");
+      pttStart() {
+        console.log("PTTStart");
+        this.socket.emit("broadcast", {method:"ptt",payload:"120"}); 
       },
-      pttagain() {
-        //this.socket.emit("ptt","100");
+      pttEnd() {
+        console.log("PTTEnd");
+        this.socket.emit("broadcast", {method:"ptt",payload:"0"}); 
+      },
+      pttAgain() {
+        this.socket.emit("broadcast", {method:"pttAgain",payload:"true"}); 
       },
       snap() {
         this.socket.emit("takepicture","");
@@ -266,8 +272,8 @@
           
           target.progress = Math.round(data.percent/2);
       });
-      this.socket.on('print_progress', (data) => {
-          console.log("Print success");
+      this.socket.on('print_success', (data) => {
+          console.log("Print success "+data);
           var target = null;
           if(this.p1.connected) target = this.p1;
           else if(this.p2.connected) target = this.p2;  
@@ -295,6 +301,13 @@ body {
   color:white;
   font-family: "Work Sans" !important;
   font-weight: 300;
+  -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Old versions of Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome, Opera and Firefox */
 }
 .main-container {
   height:100vh;
