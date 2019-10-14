@@ -1,5 +1,6 @@
 <template>
   <b-container fluid class="main-container">
+    <div class="overlay" v-if="!this.renderComplete">Processing...</div>
     <b-row>
       <b-col cols="12" class="text-left">
         <span class="header text-left">Styles</span>
@@ -43,8 +44,12 @@
               </b-col>
             </b-row>        
           </b-col>     
-          <b-col class="text-left work module" id="p1">
+          <b-col :class="['text-left work module',{ pinactive : !p1.connected}]" id="p1" v-on:click="activatePrinter(1)">
             <div class="header">Printer 1 (LEFT - GOLD)</div>
+            <div class="overlay" v-if="!p1.connected">
+              <span v-if="!p1.connected && !p2.connected"><br/><br/><br/>Please wait</span>
+              <span v-else><br/><br/><br/>Tap to activate</span>              
+            </div>
             <div :class="['ministatus wide' ,{ ok : p1.connected},{ notOk : p2.connected}]">Con</div>
             <div :class="['ministatus wide' ,{ ok : p1.connected},{ notOk : p2.connected}]">OK</div>
             <div class="printerbatt">
@@ -60,8 +65,12 @@
                 <div v-for="num in 50" :class="['battblock' ,{ filled : num <= p1.progress }]" :key="num" :id="getBattBlockID(num)" />
             </div>       
           </b-col>
-          <b-col class="text-left work module" id="p2">
+          <b-col :class="['text-left work module',{ pinactive : !p2.connected}]" id="p2" v-on:click="activatePrinter(2)">
             <div class="header">Printer 2 (RIGHT - SILVER)</div>
+            <div class="overlay" v-if="!p2.connected">
+              <span v-if="!p1.connected && !p2.connected"><br/><br/><br/>Please wait</span>
+              <span v-else><br/><br/><br/>Tap to activate</span>              
+            </div>
             <div :class="['ministatus wide' ,{ ok : p2.connected},{ notOk : p1.connected}]">Con</div>
             <div :class="['ministatus wide' ,{ ok : p2.connected},{ notOk : p1.connected}]">OK</div>
             <div class="printerbatt"> 
@@ -108,31 +117,12 @@
 
     },
     created: function () {
-      this.effects.push("this.brightness(0)");
-      this.effects.push(function(){ this.brightness(25) });
-      this.effects.push(function(){ this.greyscale() });
-      this.effects.push(function(){ this.colorize(25, 180, 200, 20) });
-      this.effects.push(function(){ this.processKernel("Box Blur", [
-          3, 1, 3,
-          3, 1, 3,
-          3, 1, 3
-        ]) });
-      this.effects.push(function(){  this.vibrance(60).hue(87).gamma(1.3).clip(7).contrast(31).saturation(62).sepia(83).noise(5) });
-      
-      //Initial FX / conversion to canvas      
-      window.Caman("#img1 img", function(){ this.brightness(0)});
-      window.Caman("#img2 img", function(){ this.brightness(0)});
-      window.Caman("#img3 img", function(){ this.brightness(0)});
-      window.Caman("#img4 img", function(){ this.brightness(0)});
-      window.Caman("#img5 img", function(){ this.brightness(0)});
-      window.Caman("#img6 img", function(){ this.brightness(0)});
-      window.Caman("#img7 img", function(){ this.brightness(0)});
-      console.log("Created ran again");
+
     },
     data: () => ({
       socket: io('192.168.188.55:8099'),
       initialPictureSrc: "moody.png",
-      numEffects: 7,
+      numEffects: 5,
       effects: [],
       currentEffect: "",
       tmpimg: "moody.png",
@@ -141,6 +131,7 @@
       camStatus: false,
       coinStatus: false,
       wifiStatus: false,  
+      renderComplete: true,
       p1: {
         connected: false,
         ok: false,
@@ -169,6 +160,10 @@
         this.socket.emit("broadcast", {method:"pttAgain",payload:"true"}); 
       },
       snap() {
+        this.tmpimg = "moody.png";
+        this.currentEffect = "none";
+        this.$forceUpdate();
+        this.fullrerender++;     
         this.socket.emit("takepicture","");
       },
       print() {
@@ -193,27 +188,34 @@
       updatepics() {
         //Apply effects
         console.log("Onload fired");
-        var targets = document.getElementById('previews').getElementsByTagName('canvas');
+        /*var targets = document.getElementById('previews').getElementsByTagName('canvas');
         for (var i = targets.length - 1; i >= 0; i--) {
           targets[i].getContext("2d").drawImage(this.tmpimg, 0,0);
-        }
-
-        //setTimeout(this.applyFX, 2000);         
+        }*/     
       },
       applyFX() {
         console.log("applyFX");
         window.Caman.Store.items = {};
-        window.Caman("#img1 img", this.tmpimg, function(){ this.brightness(0).render() });
-        window.Caman("#img2 img", this.tmpimg, function(){ this.brightness(25).render() });
-        window.Caman("#img3 img", this.tmpimg, function(){ this.greyscale().render() });
-        window.Caman("#img4 img", this.tmpimg, function(){ this.colorize(25, 180, 200, 20).render() });
-        window.Caman("#img5 img", this.tmpimg, function(){ this.processKernel("Box Blur", [
+        var that = this; //oh wow, this hurts (or that?)
+        window.Caman("#img1 img", this.tmpimg, function(){ this.render(console.log("FX1 complete")) });
+        window.Caman("#img2 img", this.tmpimg, function(){ this.greyscale().render(console.log("FX2 complete")) });
+        window.Caman("#img3 img", this.tmpimg, function(){ this.colorize(25, 180, 200, 20).render(console.log("FX3 complete")) });
+        window.Caman("#img4 img", this.tmpimg, function(){ this.processKernel("Box Blur", [
           3, 1, 3,
           3, 1, 3,
           3, 1, 3
-        ]).render() });     
-        window.Caman("#img6 img", function(){ this.vibrance(60).hue(87).gamma(1.3).clip(7).contrast(31).saturation(62).sepia(83).noise(5).render() });
-        window.Caman("#img7 img", function(){ this.brightness(0).render() });
+        ]).render(console.log("FX4 complete")) });     
+        window.Caman("#img5 img", function(){ this.sepia(83).noise(5).render(that.renderCompleteCallback)});     
+      },
+      activatePrinter(id) {
+        this.p1.connected = false;
+        this.p2.connected = false;
+        if(id == 1) this.socket.emit("broadcast",{method:"wificonnect",payload:"gold"});
+        else if(id == 2) this.socket.emit("broadcast",{method:"wificonnect",payload:"silver"});
+      },
+      renderCompleteCallback() {
+        console.log("FX render complete");
+        this.renderComplete = true;
         this.currentEffect = "img1";
       },
     },
@@ -224,6 +226,7 @@
       });
       this.socket.on('picturedownloaded', (data) => {        
         //Conversion
+        this.renderComplete = false;
         console.log("Received new shot, converting...")
         this.tmpimg = "data:image/jpeg;base64,"+data;
         this.$forceUpdate();
@@ -463,5 +466,36 @@ body {
 }
 .filled {
   background-color: #ccffcc;
+}
+.pinactive {
+  opacity: 0.5;
+}
+.overlay {
+  display: block;
+  background-color: rgba(0,0,0,0.4);
+  width:100%;
+  height:100%;
+  position:absolute;
+  top:0;
+  left:0;
+  color:white;
+  font-size: 18pt;
+  margin: auto;
+  text-align: center;
+  vertical-align: middle;
+  z-index: 9999;
+}
+.pinactive .overlay {
+  display: block;
+  width:100%;
+  height:100%;
+  position:absolute;
+  top:0;
+  left:0;
+  color:white;
+  font-size: 18pt;
+  margin: auto;
+  text-align: center;
+  vertical-align: middle;
 }
 </style>
