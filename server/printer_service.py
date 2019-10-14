@@ -94,7 +94,7 @@ def on_wificonnect_success(data):
         print("Connected")
     except:
         print(traceback.format_exc())
-        print("Trying again in some secs")
+        print("Fail: Trying again in some secs")
         time.sleep(3)
         on_wificonnect_success(data)
 
@@ -105,7 +105,7 @@ def on_wificonnect_fail(data):
 
 @sio.on('request_status')
 def on_request_status(data):
-    print("Status request")
+    print("Status request received")
     global printer_obj
     global connected_printer
     global printing
@@ -115,6 +115,7 @@ def on_request_status(data):
         return
 
     try:
+        print("Status request from printer")
         info = printer_obj.getPrinterInformation()
         print(info)
         sio.emit('printer_connected', connected_printer)
