@@ -35,3 +35,8 @@ socket.on('ptt', function(lvl) {
     console.log("SIO PTT: "+lvl);
 	osc.send(new OSC.Message('/ptt', parseInt(lvl)));
 });
+
+socket.on('pttAgain', function(state) {
+    console.log("SIO PTT Again: "+state);
+  osc.send(new OSC.Message('/playback', 1));
+});
