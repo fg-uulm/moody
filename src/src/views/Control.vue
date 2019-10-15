@@ -120,7 +120,8 @@
 
     },
     data: () => ({
-      socket: io('192.168.188.55:8099'),
+      socket: io(require("os").hostname()+':8099'), 
+      //socket: io('192.168.188.55:8099'),
       initialPictureSrc: "moody.png",
       numEffects: 5,
       effects: [],
