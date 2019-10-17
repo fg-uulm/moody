@@ -2,6 +2,7 @@
 var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
+var fs = require('fs');
 
 var initialConfig = {
   isDryRun : false,
@@ -9,6 +10,8 @@ var initialConfig = {
 };
 
 var clients = [];
+
+let testimg = null;
 
 io.on('connection', function (socket) {
  if(initialConfig.debugLevel > 3) console.log('New connection:'+socket);
@@ -65,7 +68,10 @@ io.on('connection', function (socket) {
     setTimeout(function() {
      io.emit("capture", null);
      io.emit('log', {method:'capture', payload:""});
-   }, 500);      
+     //TESTING
+     io.emit('picturedownloaded', testimg);
+     console.log("emit testimg");
+    }, 500);      
   });
 
    socket.on('captured', function(imagedata) {
@@ -125,3 +131,11 @@ io.on('connection', function (socket) {
 http.listen(8099, function () {
   console.log('listening on *:8099');
 });
+
+try {
+  var data = fs.readFileSync("C:\\Users\\flo\\Downloads\\DownloadNelli.png");
+  testimg = Buffer.from(data).toString('base64'); 
+  console.log("Img ok");   
+} catch(e) {
+  console.log('Error:', e.stack);
+}
