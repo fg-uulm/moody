@@ -31,8 +31,8 @@
 
     },
     data: () => ({
-      socket: io(require("os").hostname()+':8099'), 
-      //socket: io('192.168.188.55:8099'),
+      //socket: io(require("os").hostname()+':8099'), 
+      socket: io('10.0.0.25:8099'),
       logsAcc: new Date().toLocaleTimeString()+" | --- Logging start ---\n", 
     }),
     methods: {
