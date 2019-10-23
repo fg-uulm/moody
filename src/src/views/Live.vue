@@ -19,6 +19,11 @@
         </pane>        
       </splitpanes>
     </b-row>
+    <b-row class="keystate_overlay">
+      <b-col cols="12">
+        <div v-if="pttPressed">MIC ON</div>
+      </b-col>
+    </b-row>  
   </b-container>
 </template>
 
@@ -34,14 +39,42 @@
     },
     created: function () {
       console.log("Created");
+      window.addEventListener('keydown', this.onkeydown);
+      window.addEventListener('keyup', this.onkeyup);
     },
     data: () => ({
-      //socket: io(require("os").hostname()+':3001')    
-      socket: io('192.168.188.55:8099'),
+      //socket: io(require("os").hostname()+':8099'), 
+      socket: io('10.0.0.25:8099'),
       slr_src: "https://dummyimage.com/720x1280/004/fff&text=Cam+SLR",
       ceiling_src: "https://dummyimage.com/720x1280/004/fff&text=Cam+Ceiling",
-      outdoor_src: "https://dummyimage.com/720x1280/004/fff&text=Cam+Outdoor"
+      outdoor_src: "https://dummyimage.com/720x1280/004/fff&text=Cam+Outdoor",
+      pttPressed: false
+
     }),
+    methods: {
+      onkeydown(event){
+        //this.socket.emit('KEYB_INPUT', 10);
+        console.log(event);
+        if(event.code == "Space") {
+          if(!this.pttPressed) {
+            this.pttPressed = true;
+            this.socket.emit("broadcast", {method:"ptt",payload:"120"}); 
+          }
+        }        
+      },
+      onkeyup(event){
+        //this.socket.emit('KEYB_INPUT', 10);
+        console.log(event);
+        if(event.code == "Space") {
+          this.pttPressed = false;
+          this.socket.emit("broadcast", {method:"ptt",payload:"0"}); 
+        } else if(event.code == "Enter") {
+          this.socket.emit("takepicture","");
+        }  else if(event.code == "Tab") {
+          this.socket.emit("broadcast", {method:"pttAgain",payload:"true"}); 
+        }
+      },
+    },
     mounted() {
       this.socket.on('CLIENT_LIST', (data) => {
           console.log(data);
@@ -77,5 +110,14 @@
   text-align: left;
   margin:0;
   padding:0;
+}
+.keystate_overlay {
+  width: 100%;
+  position: absolute;
+  bottom:0;
+  left:0;
+  color:red;
+  font-size: 60pt;
+  background-color: rgba(0,0,0,0.2);
 }
 </style>
