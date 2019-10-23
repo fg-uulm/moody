@@ -21,7 +21,7 @@ The same needs to be done for olad not to lock USBserial interfaces for each oth
 
 var errors = [];
 
-var masterServer = '192.168.188.55'; 
+var masterServer = '10.0.0.25'; 
 var masterServerPort = 8099;
 
 /*
@@ -63,8 +63,8 @@ port.on('data', function (data) {
 	console.log('Serial Port Data:', received);
   console.log('Raw data:',data);
   if(!isNaN(received) && received != 0) {
-    console.log("Coin inserted: "+received/10.0)
-    socket.emit("coin", received/10.0);
+    console.log("Coin inserted: "+received)
+    socket.emit("coin", received);
   } 
   else {
     raiseError(E.COINDETECTOR_FAULTY);

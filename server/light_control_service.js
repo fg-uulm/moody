@@ -18,7 +18,7 @@ var mumbleOptions = {
     cert: fs.readFileSync( 'cert.pem' )
 };
 
-var masterServer = '192.168.188.55'; 
+var masterServer = '10.0.0.25'; 
 var masterServerPort = 8099;
 var idleBright = 80;
 var flashBright = 255;
