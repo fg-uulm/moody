@@ -10,8 +10,13 @@ Vue Application
 Distributed Microservices
 
 ```nodemon <microservice-name>.js```
+
+
 or using PM2
+
+
 ```pm2 start <microservice-name>.js```
+
 ```pm2 start --interpreter python3 --interpreter-args -u <microservice-name>.py```
 
 
